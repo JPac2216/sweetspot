@@ -1,1 +1,1 @@
-# squirrel-finder
+# SweetSpot
