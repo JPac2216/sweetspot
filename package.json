@@ -1,0 +1,23 @@
+{
+  "name": "sweetspot",
+  "version": "1.0.0",
+  "description": "",
+  "homepage": "https://github.com/JPac2216/sweetspot#readme",
+  "bugs": {
+    "url": "https://github.com/JPac2216/sweetspot/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JPac2216/sweetspot.git"
+  },
+  "license": "ISC",
+  "author": "Matthew Mohamed, Jake Paccione, Sameer Sethuram, Sarah Simbulan",
+  "type": "module",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "dependencies": {
+    "mongodb": "^7.2.0"
+  }
+}
