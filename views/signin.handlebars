@@ -1,0 +1,19 @@
+<h1>Sign In</h1>
+
+{{#if error}}
+    <p>{{error}}</p>
+{{/if}}
+
+<form id="signin-form" method="POST" action="/signin">
+    <label for="email">Email:</label>
+    <input type="email" id="email" name="email" />
+
+    <label for="password">Password:</label>
+    <input type="password" id="password" name="password" />
+
+    <button id="submit_button" name="submit_button">Sign In</button>
+</form>
+
+<div id="error" class="error" hidden> </div>
+
+<a href="/register">Click here to signup!</a>
