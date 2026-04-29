@@ -43,7 +43,7 @@ export const createUser = async (
     gender = gender.trim();
 
     //Location validation: primaryLocation must be one of the 5 boroughs of NYC, secondaryLocation can either be empty or one of the 5 boroughs but cannot be the same as primary
-    let validLocations = ["manhattan", "brooklyn", "queens", "bronx", "staten island"];
+    let validLocations = ["manhattan", "brooklyn", "queens", "the bronx", "staten island"];
     if(typeof primaryLocation !== "string" || !validLocations.includes(primaryLocation.trim().toLowerCase())) throw "createUser: primaryLocation must be one of the 5 boroughs of NYC.";
     primaryLocation = primaryLocation.trim().toLowerCase();
     if (!secondaryLocation || secondaryLocation.trim().length === 0) {

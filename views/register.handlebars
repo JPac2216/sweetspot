@@ -6,19 +6,19 @@
 
 <form id="signup-form" name="signup-form" method="POST" action="/register">
     <label for="firstName">First Name:</label>
-    <input type="text" id="firstName" name="firstName" />
+    <input type="text" id="firstName" name="firstName" required />
 
     <label for="lastName">Last Name:</label>
-    <input type="text" id="lastName" name="lastName" />
+    <input type="text" id="lastName" name="lastName" required />
 
     <label for="email">Email:</label>
-    <input type="email" id="email" name="email" />
+    <input type="email" id="email" name="email" required />
 
     <label for="password">Password:</label>
-    <input type="password" id="password" name="password" />
+    <input type="password" id="password" name="password" required />
 
     <label for="confirmPassword">Confirm Password:</label>
-    <input type="password" id="confirmPassword" name="confirmPassword" />
+    <input type="password" id="confirmPassword" name="confirmPassword" required />
 
     <label for="gender">Gender:</label>
     <select id="gender" name="gender">
@@ -30,21 +30,21 @@
 
     <label for="primaryLocation">Primary Location:</label>
     <select id="primaryLocation" name="primaryLocation">
-        <option value="theBronx">The Bronx</option>
+        <option value="the bronx">The Bronx</option>
         <option value="brooklyn">Brooklyn</option>
         <option value="manhattan">Manhattan</option>
         <option value="queens">Queens</option>
-        <option value="statenIsland">Staten Island</option>
+        <option value="staten island">Staten Island</option>
     </select>
 
     <label for="secondaryLocation">Secondary Location:</label>
     <select id="secondaryLocation" name="secondaryLocation">
         <option value="">None</option>
-        <option value="theBronx">The Bronx</option>
+        <option value="the bronx">The Bronx</option>
         <option value="brooklyn">Brooklyn</option>
         <option value="manhattan">Manhattan</option>
         <option value="queens">Queens</option>
-        <option value="statenIsland">Staten Island</option>
+        <option value="staten island">Staten Island</option>
     </select>
 
     <button id="submitButton" name="submitButton">Register</button>
