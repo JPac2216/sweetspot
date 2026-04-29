@@ -2,7 +2,7 @@ import { ObjectId } from 'mongodb';
 import { dates, spots, users } from 'config/mongoCollections.js';
 
 // HARDCODE ALL THE BOROUGHS HERE
-const boroughs = [];
+const boroughs = ["the bronx", "queens", "manhattan", "staten island", "brooklyn"];
 
 export const isValidEventList = async (events) => {
     const spotsCollection = await spots();
