@@ -83,6 +83,7 @@ export const createDate = async (
     return { "dateCreated": true };
 };
 
+
 export const addToSchedule = async (
     dateId,
     dateSpotId,
@@ -127,6 +128,7 @@ export const addToSchedule = async (
     return successfulAddition;
 };
 
+
 export const deleteFromSchedule = async (
     dateId,
     dateSpotId
@@ -156,4 +158,35 @@ export const deleteFromSchedule = async (
 
     return successfulAddition;
 
+};
+
+
+export const publishDate = async (
+    dateId
+) => {
+    if (!dateId || typeof dateId !== "string") throw "publishDate: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "publishDate: dateId parameter must be a valid ObjectId.";
+
+    const datesCollection = await dates();
+    const publishDateVisibility = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: {visibility: "public" } }, { returnDocument: "after" });
+
+    if (!publishDateVisibility) throw "publishDate: date could not be published.";
+
+    return publishDateVisibility;
+};
+
+export const privateDate = async (
+    dateId
+) => {
+    if (!dateId || typeof dateId !== "string") throw "privateDate: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "publishDate: dateId parameter must be a valid ObjectId.";
+
+    const datesCollection = await dates();
+    const privateDateVisibility = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: {visibility: "private"} }, { returnDocument: "after" });
+
+    if (!privateDateVisibility) throw "privateDate: date could not be privated.";
+
+    return privateDateVisibility;
 };
