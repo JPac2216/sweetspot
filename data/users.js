@@ -176,7 +176,7 @@ export const updateUser = async (email, password, updateObj) => {
         if (typeof updateObj.email !== "string" || updateObj.email.trim().length === 0 || !email_regex.test(updateObj.email.trim())) throw "Email parameter must be a valid email address.";
         updateObj.email = updateObj.email.trim().toLowerCase();
         const existingEmail = await usersCollection.findOne({ "email": updateObj.email, "_id": {$ne: new ObjectId(user._id)} });
-        if (existingEmail) throw "createUser: a user with that email already exists in the database!";
+        if (existingEmail) throw "updateUser: a user with that email already exists in the database!";
 
         const updatedInfo = await usersCollection.findOneAndUpdate(
             {_id: new ObjectId(user._id)},
