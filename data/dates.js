@@ -82,3 +82,14 @@ export const createDate = async (
 
     return { "dateCreated": true };
 };
+
+export const getDateById = async (dateId) => {
+    if (!dateId) throw "getDateById: dateId must be supplied.";
+    if (!ObjectId.isValid(dateId)) throw "getDateById: dateId is not a valid ObjectId.";
+
+    const datesCollection = await dates();
+    const date = await datesCollection.findOne({ _id: new ObjectId(dateId) });
+    if (!date) throw "getDateById: no date found with that id.";
+
+    return date;
+};
