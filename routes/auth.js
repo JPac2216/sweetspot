@@ -2,6 +2,7 @@ import {Router} from 'express';
 const router = Router();
 import { createUser ,authenticateUser } from '../data/users.js';
 import { dates, members, spots, users } from '../config/mongoCollections.js';
+import * as helpers from '../helpers.js';
 
 router
   .route('/')
@@ -95,77 +96,16 @@ router
       return res.status(400).render('register', {error: 'All fields must be supplied to create a user.', title: 'Error: Missing Fields'});
     }
    
-    firstName = firstName.trim();
-    lastName = lastName.trim();
-    email = email.trim();
-    password = password.trim();
-    confirmPassword = confirmPassword.trim();
-    gender = gender.trim();
-    primaryLocation = primaryLocation.trim();
-
     //error checking
-    //Password and confirm password match
-    if(confirmPassword !== password){
-      return res.status(400).render('register', {error: 'Passwords do not match', title: 'Error: Password Mismatch'});
-    }
-
-    //check first name and last name
-    const name_regex = /^[a-zA-Z]{2,20}$/;
-    if (typeof firstName !== "string" || firstName.trim().length === 0 || !name_regex.test(firstName.trim())){ 
-      return res.status(400).render('register', {error: 'First name must be a string between 2 and 20 characters in length only containing letters.', title: 'Error: Invalid Input'});
-    }
-    if (typeof lastName !== "string" || lastName.trim().length === 0 || !name_regex.test(lastName.trim())){
-      return res.status(400).render('register', {error: 'Last name must be a string between 2 and 20 characters in length only containing letters.', title: 'Error: Invalid Input'});
-    }
-    firstName = firstName.trim();
-    lastName = lastName.trim();
-
-    //check email
-    const email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    if (typeof email !== "string" || email.trim().length === 0 || !email_regex.test(email.trim())){
-      return res.status(400).render('register', {error: 'Email must be a valid email address.', title: 'Error: Invalid Input'});
-    }
-    email = email.trim().toLowerCase();
-    const usersCollection = await users();
-    const existingEmail = await usersCollection.findOne({ "email": email });
-    if (existingEmail){ 
-      return res.status(400).render('register', {error: 'A user with that email already exists in the database!', title: 'Error: Email Already Exists'});
-    }
-
-    //check password
-    const password_regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ])[^ ]{8,}$/;
-    if (typeof password !== "string" || password.trim().length === 0 || !password_regex.test(password.trim())){
-       return res.status(400).render('register', {error: 'Password must be a valid password that is at least 8 characters in length containing at least one letter, number, and special character.', title: 'Error: Invalid Input'});
-    }
-    password = password.trim();
-
-    //check gender
-    const gender_regex = /^(male|female|non-binary|other)$/i; 
-    if (typeof gender !== "string" || gender.trim().length === 0 || !gender_regex.test(gender.trim())){ 
-      return res.status(400).render('register', {error: 'Gender must be a string that is recognized by our system.', title: 'Error: Invalid Input'});
-    }
-    gender = gender.trim();
-
-    //check primary and secondary location
-    let validLocations = ["manhattan", "brooklyn", "queens", "the bronx", "staten island"];
-    if(typeof primaryLocation !== "string" || !validLocations.includes(primaryLocation.trim().toLowerCase())){
-      return res.status(400).render('register', {error: 'Primary location must be one of the 5 boroughs of NYC.', title: 'Error: Invalid Input'});
-    }
-    primaryLocation = primaryLocation.trim().toLowerCase();
-    if (!secondaryLocation || secondaryLocation.trim().length === 0) {
-        secondaryLocation = "";
-    } else {
-        if (typeof secondaryLocation !== "string" || !validLocations.includes(secondaryLocation.trim().toLowerCase())){ 
-          return res.status(400).render('register', {error: 'Secondary location must be one of the 5 boroughs of NYC.', title: 'Error: Invalid Input'});
-        }
-        if (primaryLocation.toLowerCase() === secondaryLocation.trim().toLowerCase()){ 
-          return res.status(400).render('register', {error: 'Primary location and secondary location cannot be the same.', title: 'Error: Invalid Input'});
-        }
-        secondaryLocation = secondaryLocation.trim().toLowerCase();
+    let validated = null;
+    try{
+      validated = await helpers.validateUser(firstName, lastName, email, password, confirmPassword, gender, primaryLocation, secondaryLocation);
+    } catch(e){
+      return res.status(400).render('register', {error: e, title: 'Error: Invalid Input'});
     }
 
     try{
-      let newUser = await createUser(firstName, lastName, email, password, gender, primaryLocation, secondaryLocation);
+      let newUser = await createUser(validated.firstName, validated.lastName, validated.email, validated.password, validated.gender, validated.primaryLocation, validated.secondaryLocation);
       if(newUser.userCreated !== true || !newUser){
         return res.status(500).render('register', {error: 'Failed to create user', title: 'Error: Internal Server Error'});
       }else{

@@ -1,6 +1,7 @@
 import { dates, members, spots, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcrypt';
+import * as helpers from '../helpers.js';
 const saltRounds = 16;
 
 
@@ -34,7 +35,7 @@ export const createUser = async (
 
     //Password validation: must be at least 8 characters in length and contain at least one letter, number, and special character
     const password_regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ])[^ ]{8,}$/;
-    if (typeof password !== "string" || password.trim().length === 0 || !password_regex.test(password.trim())) throw "createUser: password parameter must be a valid password that is at leat 8 characters in length containing at least one letter, number, and special character.";
+    if (typeof password !== "string" || password.trim().length === 0 || !password_regex.test(password.trim())) throw "createUser: password parameter must be a valid password that is at leat 8 characters in length containing at least one uppercase letter, number, and special character.";
     password = password.trim();
 
     //Gender validation: must be a string that is either male female non-binary or other
@@ -43,13 +44,12 @@ export const createUser = async (
     gender = gender.trim();
 
     //Location validation: primaryLocation must be one of the 5 boroughs of NYC, secondaryLocation can either be empty or one of the 5 boroughs but cannot be the same as primary
-    let validLocations = ["manhattan", "brooklyn", "queens", "the bronx", "staten island"];
-    if(typeof primaryLocation !== "string" || !validLocations.includes(primaryLocation.trim().toLowerCase())) throw "createUser: primaryLocation must be one of the 5 boroughs of NYC.";
+    if(typeof primaryLocation !== "string" || !helpers.boroughs.includes(primaryLocation.trim().toLowerCase())) throw "createUser: primaryLocation must be one of the 5 boroughs of NYC.";
     primaryLocation = primaryLocation.trim().toLowerCase();
     if (!secondaryLocation || secondaryLocation.trim().length === 0) {
         secondaryLocation = "";
     } else {
-        if (typeof secondaryLocation !== "string" || !validLocations.includes(secondaryLocation.trim().toLowerCase())) throw "createUser: secondaryLocation must be one of the 5 boroughs of NYC.";
+        if (typeof secondaryLocation !== "string" || !helpers.boroughs.includes(secondaryLocation.trim().toLowerCase())) throw "createUser: secondaryLocation must be one of the 5 boroughs of NYC.";
         if (primaryLocation.toLowerCase() === secondaryLocation.trim().toLowerCase()) throw "createUser: primaryLocation and secondaryLocation cannot be the same.";
         secondaryLocation = secondaryLocation.trim().toLowerCase();
     }
@@ -136,115 +136,41 @@ export const updateUser = async (email, password, updateObj) => {
       if(!validKeys.includes(key)) throw "Invalid key in update object";
     }
 
-    //FirstName update
-    if(Object.hasOwn(updateObj, 'firstName')){
-        //error check the firstName
-        const name_regex = /^[a-zA-Z]{2,20}$/;
-        if (typeof updateObj.firstName !== "string" || updateObj.firstName.trim().length === 0 || !name_regex.test(updateObj.firstName.trim())) throw "FirstName parameter must be a string between 2 and 20 characters in length only containing letters.";
-        updateObj.firstName = updateObj.firstName.trim();
+    //error check
+    const validated = await helpers.validateUser(
+        updateObj.firstName, updateObj.lastName, updateObj.email,
+        updateObj.password, null, updateObj.gender,
+        updateObj.primaryLocation, updateObj.secondaryLocation,
+        true  // isUpdating flag
+    );
 
-        const updatedInfo = await usersCollection.findOneAndUpdate(
-            {_id: new ObjectId(user._id)},
-            {$set: {firstName: updateObj.firstName}},
-            {returnDocument: 'after'}
-        );
-        if (!updatedInfo) {
-            throw 'could not update first name successfully';
-        }
+    let updateFields = {};
+    if(Object.hasOwn(updateObj, 'firstName')){       
+        updateFields.firstName = validated.firstName;
     }
-
-    //LastName update
-    if(Object.hasOwn(updateObj, 'lastName')){
-        //error check the last Name
-        const name_regex = /^[a-zA-Z]{2,20}$/;
-        if (typeof updateObj.lastName !== "string" || updateObj.lastName.trim().length === 0 || !name_regex.test(updateObj.lastName.trim())) throw "LastName parameter must be a string between 2 and 20 characters in length only containing letters.";
-        updateObj.lastName = updateObj.lastName.trim();
-        const updatedInfo = await usersCollection.findOneAndUpdate(
-            {_id: new ObjectId(user._id)},
-            {$set: {lastName: updateObj.lastName}},
-            {returnDocument: 'after'}
-        );
-        if (!updatedInfo) {
-            throw 'could not update Last name successfully';
-        }
+    if(Object.hasOwn(updateObj, 'lastName')){          
+        updateFields.lastName = validated.lastName;
     }
-
-    //email update
-    if(Object.hasOwn(updateObj, 'email')){
-        //error check the email
-        const email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-        if (typeof updateObj.email !== "string" || updateObj.email.trim().length === 0 || !email_regex.test(updateObj.email.trim())) throw "Email parameter must be a valid email address.";
-        updateObj.email = updateObj.email.trim().toLowerCase();
-        const existingEmail = await usersCollection.findOne({ "email": updateObj.email, "_id": {$ne: new ObjectId(user._id)} });
-        if (existingEmail) throw "updateUser: a user with that email already exists in the database!";
-
-        const updatedInfo = await usersCollection.findOneAndUpdate(
-            {_id: new ObjectId(user._id)},
-            {$set: {email: updateObj.email}},
-            {returnDocument: 'after'}
-        );
-        if (!updatedInfo) {
-            throw 'could not update email successfully';
-        }
+    if(Object.hasOwn(updateObj, 'email')){           
+        updateFields.email = validated.email;
     }
-
-    //gender update
-    if(Object.hasOwn(updateObj, 'gender')){
-        //error check the gender
-        const gender_regex = /^(male|female|non-binary|other)$/i; 
-        if (typeof updateObj.gender !== "string" || updateObj.gender.trim().length === 0 || !gender_regex.test(updateObj.gender.trim())) throw "Gender parameter must be a string that is recognized by our system.";
-        updateObj.gender = updateObj.gender.trim();
-        
-        const updatedInfo = await usersCollection.findOneAndUpdate(
-            {_id: new ObjectId(user._id)},
-            {$set: {gender: updateObj.gender}},
-            {returnDocument: 'after'}
-        );
-        if (!updatedInfo) {
-            throw 'could not update gender successfully';
-        }
+    if(Object.hasOwn(updateObj, 'gender')){            
+        updateFields.gender = validated.gender;
     }
-
-    //primaryLocation update
-    if(Object.hasOwn(updateObj, 'primaryLocation')){
-        //error check the primary location
-        let validLocations = ["manhattan", "brooklyn", "queens", "bronx", "staten island"];
-        if(typeof updateObj.primaryLocation !== "string" || !validLocations.includes(updateObj.primaryLocation.trim().toLowerCase())) throw "PrimaryLocation must be one of the 5 boroughs of NYC.";
-        updateObj.primaryLocation = updateObj.primaryLocation.trim().toLowerCase();
-        
-        const updatedInfo = await usersCollection.findOneAndUpdate(
-            {_id: new ObjectId(user._id)},
-            {$set: {primaryLocation: updateObj.primaryLocation}},
-            {returnDocument: 'after'}
-        );
-        if (!updatedInfo) {
-            throw 'could not update primary Location successfully';
-        }
+    if(Object.hasOwn(updateObj, 'primaryLocation')){   
+        updateFields.primaryLocation = validated.primaryLocation;
     }
-
-    //secondaryLocation update
     if(Object.hasOwn(updateObj, 'secondaryLocation')){
-        //error check the secondary location
-        let validLocations = ["manhattan", "brooklyn", "queens", "bronx", "staten island"];
-        let secondaryLocation = updateObj.secondaryLocation;
-        if (!secondaryLocation || secondaryLocation.trim().length === 0) {
-            secondaryLocation = "";
-        } else {
-            if (typeof secondaryLocation !== "string" || !validLocations.includes(secondaryLocation.trim().toLowerCase())) throw "SecondaryLocation must be one of the 5 boroughs of NYC.";
-            let effectivePrimary = updateObj.primaryLocation ?? user.primaryLocation;
-            if (effectivePrimary.toLowerCase() === secondaryLocation.trim().toLowerCase()) throw "PrimaryLocation and secondaryLocation cannot be the same.";
-            secondaryLocation = secondaryLocation.trim().toLowerCase();
-        }
-        
-        const updatedInfo = await usersCollection.findOneAndUpdate(
-            {_id: new ObjectId(user._id)},
-            {$set: {secondaryLocation: secondaryLocation}},
-            {returnDocument: 'after'}
-        );
-        if (!updatedInfo) {
-            throw 'could not update secondary Location successfully';
-        }
+        updateFields.secondaryLocation = validated.secondaryLocation;
     }
+
+    const updatedInfo = await usersCollection.findOneAndUpdate(
+        {_id: new ObjectId(user._id)},
+        {$set: updateFields},
+        {returnDocument: 'after'}
+    );
+    if(!updatedInfo.value) throw 'Could not update user successfully';
+
 
     return { "userUpdated": true };
 
