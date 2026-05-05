@@ -82,3 +82,12 @@ export const createDate = async (
 
     return { "dateCreated": true };
 };
+
+export const deleteDate = async (
+    dateId,
+    confirmation
+) => {
+    const confirmDelete = "Delete this date";
+    if (!dateId || !confirmation) throw "deleteDate: dateId and confirmation required to delete the date"
+    // Add the rest of delete date here
+};
