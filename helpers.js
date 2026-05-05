@@ -1,8 +1,8 @@
 import { ObjectId } from 'mongodb';
-import { dates, spots, users } from 'config/mongoCollections.js';
+import { dates, spots, users } from './config/mongoCollections.js';
 
 // HARDCODE ALL THE BOROUGHS HERE
-const boroughs = ["the bronx", "queens", "manhattan", "staten island", "brooklyn"];
+export const boroughs = ["the bronx", "queens", "manhattan", "staten island", "brooklyn"];
 
 export const isValidEventList = async (events) => {
     const spotsCollection = await spots();
@@ -59,4 +59,105 @@ export const getCurrentTime = () => {
     const formattedHours = pad(hours);
 
     return `${formattedHours}:${minutes}${ampm}`;
+};
+
+export const getAllUsers = async () => {
+  const userCollection = await users();
+  let userList = await userCollection.find({}).toArray();
+  if (!userList) throw 'Could not get all users';
+  userList = userList.map((element) => {
+    element._id = element._id.toString();
+    return element;
+  });
+  return userList;
+};
+
+export const validateUser = async (
+    firstName,
+    lastName,
+    email,
+    password,
+    confirmPassword,
+    gender,
+    primaryLocation,
+    secondaryLocation,
+    isUpdating = false
+) => {
+    // Only require all fields when creating
+    if (!isUpdating) {
+        if (!firstName || !lastName || !email || !password || !gender || !primaryLocation || !confirmPassword){
+            throw 'All fields must be supplied to create a user.';
+        }
+        if (confirmPassword !== password){
+            throw "Passwords do not match";
+        }
+    }
+
+    const name_regex = /^[a-zA-Z]{2,20}$/;
+    if (!isUpdating || firstName) {
+        if (typeof firstName !== "string" || firstName.trim().length === 0 || !name_regex.test(firstName.trim())){ 
+            throw "First name must be a string between 2 and 20 characters in length only containing letters.";
+        }
+        firstName = firstName.trim();
+    }
+
+    if (!isUpdating || lastName) {
+        if (typeof lastName !== "string" || lastName.trim().length === 0 || !name_regex.test(lastName.trim())){
+            throw "Last name must be a string between 2 and 20 characters in length only containing letters.";
+        }
+        lastName = lastName.trim();
+    }
+
+    if (!isUpdating || email) {
+        const email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+        if (typeof email !== "string" || email.trim().length === 0 || !email_regex.test(email.trim())){
+            throw "Email must be a valid email address.";
+        }
+        email = email.trim().toLowerCase();
+        // Only check duplicate email on create
+        if (!isUpdating) {
+            const usersCollection = await users();
+            const existingEmail = await usersCollection.findOne({ "email": email });
+            if (existingEmail){ 
+                throw "A user with that email already exists in the database!";
+            }
+        }
+    }
+
+    if (!isUpdating || password) {
+        const password_regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ])[^ ]{8,}$/;
+        if (typeof password !== "string" || password.trim().length === 0 || !password_regex.test(password.trim())){
+            throw "Password must be a valid password that is at least 8 characters in length containing at least one uppercase letter, number, and special character.";
+        }
+        password = password.trim();
+    }
+
+    if (!isUpdating || gender) {
+        const gender_regex = /^(male|female|non-binary|other)$/i; 
+        if (typeof gender !== "string" || gender.trim().length === 0 || !gender_regex.test(gender.trim())){ 
+            throw "Gender must be a string that is recognized by our system.";
+        }
+        gender = gender.trim();
+    }
+
+    if (!isUpdating || primaryLocation) {
+        if(typeof primaryLocation !== "string" || !boroughs.includes(primaryLocation.trim().toLowerCase())){
+            throw "Primary location must be one of the 5 boroughs of NYC.";
+        }
+        primaryLocation = primaryLocation.trim().toLowerCase();
+    }
+
+    if (!secondaryLocation || secondaryLocation.trim().length === 0) {
+        secondaryLocation = "";
+    } else {
+        if (typeof secondaryLocation !== "string" || !boroughs.includes(secondaryLocation.trim().toLowerCase())){ 
+            throw "Secondary location must be one of the 5 boroughs of NYC.";
+        }
+        if (primaryLocation && primaryLocation.toLowerCase() === secondaryLocation.trim().toLowerCase()){ 
+            throw "Primary location and secondary location cannot be the same.";
+        }
+        secondaryLocation = secondaryLocation.trim().toLowerCase();
+    }
+
+    return { firstName, lastName, email, password, gender, primaryLocation, secondaryLocation };
 };
