@@ -1,0 +1,56 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="card">
+        <h1>{{spot.name}}</h1>
+        <div class="date-meta">{{spot.address.borough}} / {{spot.address.street}}{{#if spot.address.zip}}, {{spot.address.zip}}{{/if}}</div>
+        {{#if spot.sweetspotRating.average}}
+        <div class="date-meta">Rating: {{spot.sweetspotRating.average}} ({{spot.sweetspotRating.count}} reviews)</div>
+        {{else}}
+        <div class="date-meta">No ratings yet</div>
+        {{/if}}
+        <div class="filter-group">
+            <button type="button" class="btn btn-blue filter-toggle" onclick="toggleFilter(this)">Add to Date</button>
+            <div class="filter-dropdown">
+                {{#each userDates}}
+                <form action="/date/{{this._id}}/addSpot" method="POST">
+                    <input type="hidden" name="spotId" value="{{../spot._id}}">
+                    <button type="submit" class="btn">{{this.title}}</button>
+                </form>
+                {{else}}
+                <span>No dates created yet.</span>
+                {{/each}}
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <p>{{spot.description}}</p>
+    </div>
+
+    <div class="reviews-section">
+        <h2 class="section-title">Reviews and Comments</h2>
+        {{#each spot.reviews}}
+        <div class="appeal-card">
+            <div>
+                <span>@{{this.username}}</span>
+                <span class="date-meta">Rating: {{this.rating}}</span>
+            </div>
+            <p>{{this.comment}}</p>
+            <div class="date-meta">{{this.createdAt}}</div>
+        </div>
+        {{else}}
+        <p>No reviews yet.</p>
+        {{/each}}
+    </div>
+</div>
+
+{{> filterDropdown}}

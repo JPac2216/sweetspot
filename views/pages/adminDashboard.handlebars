@@ -1,0 +1,53 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/admin" class="nav-btn">Manage</a>
+        <a href="/dates/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <a href="/spots/create" class="btn btn-blue">Create Spot</a>
+
+    <section>
+        <h2 class="section-title">Active Appeals</h2>
+        <div class="card-grid">
+            {{#each appeals}}
+            <div class="appeal-card">
+                <div>
+                    <div>{{this.spotData.name}}</div>
+                    <div class="appeal-meta">{{this.spotData.address.street}}, {{this.spotData.address.borough}}{{#if this.spotData.address.zip}}, {{this.spotData.address.zip}}{{/if}}</div>
+                    <div class="appeal-meta">{{this.spotData.description}}</div>
+                    <div class="appeal-meta">Submitted by: @{{this.submittedByUsername}}</div>
+                </div>
+                <div class="appeal-actions">
+                    <form action="/admin/appeals/{{this._id}}/approve" method="POST" class="form-inline">
+                        <button type="submit" class="btn btn-blue">Approve</button>
+                    </form>
+                    <form action="/admin/appeals/{{this._id}}/reject" method="POST" class="form-inline">
+                        <button type="submit" class="btn btn-red">Reject</button>
+                    </form>
+                </div>
+            </div>
+            {{else}}
+            <p>No active appeals.</p>
+            {{/each}}
+        </div>
+    </section>
+
+    <section>
+        <h2 class="section-title">Flagged Dates</h2>
+        <div class="card-grid">
+            {{#each flaggedDates}}
+            <a href="/date/{{this._id}}?admin=true" class="flagged-card">
+                <div>{{this.title}}</div>
+                <div class="appeal-meta">{{this.flagReason}}</div>
+            </a>
+            {{else}}
+            <p>No flagged dates.</p>
+            {{/each}}
+        </div>
+    </section>
+</div>

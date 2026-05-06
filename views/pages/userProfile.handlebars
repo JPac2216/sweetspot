@@ -1,0 +1,64 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="profile-header">
+        <div class="profile-avatar">
+            <svg xmlns="http://www.w3.org/2000/svg" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>
+        </div>
+        <div>
+            <div class="profile-name">{{user.firstName}} {{user.lastName}}</div>
+            <div class="date-meta">{{user.primaryLocation}}{{#if user.secondaryLocation}} / {{user.secondaryLocation}}{{/if}}</div>
+        </div>
+        <a href="/profile/edit" class="btn btn-blue">Edit Profile</a>
+    </div>
+
+    <div class="profile-section">
+        <h2 class="section-title">Public Dates</h2>
+        <div class="card-grid">
+            {{#each publicDates}}
+            <a href="/date/{{this._id}}" class="date-card">
+                <div class="date-card-title">{{this.title}}</div>
+                <div class="date-meta">{{this.borough}} / public</div>
+            </a>
+            {{else}}
+            <p>No public dates yet.</p>
+            {{/each}}
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <h2 class="section-title">Private Dates</h2>
+        <div class="card-grid">
+            {{#each privateDates}}
+            <a href="/date/{{this._id}}" class="date-card">
+                <div class="date-card-title">{{this.title}}</div>
+                <div class="date-meta">{{this.borough}} / private</div>
+            </a>
+            {{else}}
+            <p>No private dates yet.</p>
+            {{/each}}
+        </div>
+    </div>
+
+    <div class="profile-section">
+        <h2 class="section-title">Favorites</h2>
+        <div class="card-grid">
+            {{#each favoriteDates}}
+            <a href="/date/{{this._id}}" class="date-card">
+                <div class="date-card-title">{{this.title}}</div>
+                <div class="date-meta">{{this.borough}}</div>
+            </a>
+            {{else}}
+            <p>No favorites yet.</p>
+            {{/each}}
+        </div>
+    </div>
+</div>
