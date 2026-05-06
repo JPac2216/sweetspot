@@ -175,3 +175,18 @@ export const updateUser = async (email, password, updateObj) => {
     return { "userUpdated": true };
 
 };
+
+export const getUserById = async (
+    userId
+) => {
+    if (!userId) throw "getUserById: userId field must be supplied!";
+    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getUserById: userId field must be a string that is a valid ObjectId.";4
+    userId = userId.trim();
+
+    const usersCollection = await users();
+    const findUser = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    
+    if (!findUser) throw "getUserById: userId supplied could not be found in the database.";
+
+    return findUser;
+};

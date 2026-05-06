@@ -1,6 +1,6 @@
-import { dates, spots, users } from '../config/mongoCollections.js';
+import { dates, spots, users, appeals } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
-import * as helper from 'helpers.js'
+import * as helper from 'helpers.js';
 import bcrypt from 'bcrypt';
 const saltRounds = 16;
 
@@ -82,6 +82,7 @@ export const addSpotRating = async (
                     userId,
                     username,
                     comment,
+                    rating,
                     "createdAt": helper.getCurrentDate()
                 }
             }
@@ -107,9 +108,14 @@ export const deleteSpotRating = async (
     const spotsCollection = await spots();
     
     const findSpot = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
+    const findComment = null;
+    for (let comment of findSpot) {
+        if (comment._id === new ObjectId(commendId)) findComment = comment;
+    }
+    if (!findComment) throw "deleteSpotRating: comment could not be found under the spot's reviews and ratings.";
 
     let count = findSpot.sweetspotRating.count - 1;
-    let average = ((findSpot.sweetspotRating.count * findSpot.sweetspotRating.average) - rating) / count;
+    let average = ((findSpot.sweetspotRating.count * findSpot.sweetspotRating.average) - comment.rating) / count;
 
     const findAndUpdateSpot = await spotsCollection.findOneAndUpdate(
         { _id: new ObjectId(spotId)}, 
@@ -122,7 +128,7 @@ export const deleteSpotRating = async (
             },
             $pull: {
                 comments: {
-                    _id: commentId,
+                    _id: new ObjectId(commentId),
                 }
             }
         },
@@ -133,4 +139,34 @@ export const deleteSpotRating = async (
     if (!findAndUpdateSpot) throw "deleteSpotRating: comment could not be deleted from the spot.";
 
     return findAndUpdateSpot;
+};
+
+export const getAllSpots = async (
+    filter
+) => {
+    const spotsCollection = await spots();
+    const allSpotsFiltered = await spotsCollection.find(filter).toArray();
+
+    if (!allSpotsFiltered) throw "getAllSpots: couldn't retrieve any spots that match with the filter supplied.";
+    for (let spot of allSpotsFiltered) {
+        spot._id = spot._id.toString();
+    }
+
+    return allSpotsFiltered;
+};
+
+export const getSpotById = async (
+    spotId
+) => {
+    if (!spotId) throw "getSpotById: spotId must be supplied to this function!";
+    if (typeof spotId !== "string" || !ObjectId.isValid(spotId.trim())) throw "getSpotById: spotId must be a valid string that is also a valid ObjectId.";
+    spotId = spotId.trim();
+
+    const spotsCollection = await spots();
+    const findSpotById = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
+
+    if (!findSpotById) throw "getSpotById: could not find a spot with that ID.";
+    
+    findSpotById._id = findSpotById._id.toString();
+    return findSpotById;
 };
