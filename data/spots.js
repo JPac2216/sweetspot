@@ -42,103 +42,86 @@ export const createSpot = async (
 };
 
 
-export const addSpotRating = async (
+export const addReview = async (
     spotId,
     userId,
-    username,
-    comment,
+    review,
     rating
 ) => {
-    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !username || typeof username !== "string" || !comment || typeof comment !== "string" || !rating || typeof rating !== "number") throw "addSpotRating: all parameters must be supplied to this function.";
+    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || !rating || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
     spotId = spotId.trim();
     userId = userId.trim();
-    username = username.trim();
-    comment = comment.trim();
-    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !username || !comment || Number.isNaN(rating) || !Number.isFinite(rating) || rating > 5 || rating < 1) throw "addSpotRating: userId parameter must be an ObjectId, username and comment parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
+    review = review.trim();
+    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, username and review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
 
     const usersCollection = await users();
-    const findUser = await usersCollection.findOneAndUpdate({ _id: new ObjectId(userId), username });
-    if (!findUser) throw "addSpotRating: user with that userId and username combination is not stored within usersCollection.";
+    const findUser = await usersCollection.findOne({ _id: new ObjectId(userId)});
+    if (!findUser) throw "addReview: user with that userId and username combination is not stored within usersCollection.";
+    const username = findUser.username;
 
     const spotsCollection = await spots();
     
     const findSpot = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
-
-    let count = findSpot.sweetspotRating.count + 1;
-    let average = ((findSpot.sweetspotRating.count * findSpot.sweetspotRating.average) + rating) / count;
+    if (!findSpot) throw "addReview: spot with that spotId is not stored within spotsCollection.";
 
     const findAndUpdateSpot = await spotsCollection.findOneAndUpdate(
         { _id: new ObjectId(spotId)}, 
-        {
+        [{
             $set: {
-                sweetspotRating: {
-                    average,
-                    count
-                }
-            },
-            $push: {
-                comments: {
-                    _id: new ObjectId(),
-                    userId,
-                    username,
-                    comment,
-                    rating,
-                    "createdAt": helper.getCurrentDate()
-                }
+                "sweetspotRating.count": { $add: ["$sweetspotRating.count", 1]},
+                "sweetspotRating.sum": { $add: ["$sweetspotRating.sum", rating]},
+                reviews: { 
+                    $concatArrays: ["$reviews", 
+                    [{
+                        _id: new ObjectId(),
+                        userId: new ObjectId(userId),
+                        username,
+                        rating,
+                        comment: review,
+                        "createdAt": helper.getCurrentDate()
+                    }]
+                ]}
             }
-        },
+        }],
         {
             returnDocument: "after"
         }
     );
-    if (!findAndUpdateSpot) throw "addSpotRating: comment could not be added to the spot.";
+    if (!findAndUpdateSpot) throw "addReview: review could not be added to the spot.";
 
     return findAndUpdateSpot;
 };
 
-export const deleteSpotRating = async (
+export const deleteReview = async (
+    userId,
     spotId,
-    commentId
+    reviewId
 ) => {
-    if (!spotId || typeof spotId !== "string" || !commentId || typeof commentId !== "string") throw "deleteSpotRating: all parameters must be supplied.";
+    if (!userId || typeof userId !== "string" || !spotId || typeof spotId !== "string" || !reviewId || typeof reviewId !== "string") throw "deleteReview: all parameters must be supplied.";
+    userId = userId.trim();
     spotId = spotId.trim();
-    commentId = commentId.trim();
-    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(commentId)) throw "deleteSpotRating: spotId and commentId parameters must be valid ObjectIds.";
+    reviewId = reviewId.trim();
+    if (!ObjectId.isValid(userId) || !ObjectId.isValid(spotId) || !ObjectId.isValid(reviewId)) throw "deleteReview: spotId and reviewId parameters must be valid ObjectIds.";
 
     const spotsCollection = await spots();
     
-    const findSpot = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
-    const findComment = null;
-    for (let comment of findSpot) {
-        if (comment._id === new ObjectId(commendId)) findComment = comment;
-    }
-    if (!findComment) throw "deleteSpotRating: comment could not be found under the spot's reviews and ratings.";
+    const spot = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
+    if (!spot) throw "deleteReview: spot does not exist with spotId.";
 
-    let count = findSpot.sweetspotRating.count - 1;
-    let average = ((findSpot.sweetspotRating.count * findSpot.sweetspotRating.average) - comment.rating) / count;
+    const review = spot.reviews.find(r => r._id.equals(reviewId) && r.userId.equals(new ObjectId(userId)));
+    if (!review) throw "deleteReview: review does not exist with reviewId.";
+    const rating = review.rating;
 
-    const findAndUpdateSpot = await spotsCollection.findOneAndUpdate(
-        { _id: new ObjectId(spotId)}, 
+    const result = await spotsCollection.updateOne(
+        { _id: new ObjectId(spotId) },
         {
-            $set: {
-                sweetspotRating: {
-                    average,
-                    count
-                }
-            },
-            $pull: {
-                comments: {
-                    _id: new ObjectId(commentId),
-                }
-            }
-        },
-        {
-            returnDocument: "after"
+            $inc: { "sweetspotRating.count": -1, "sweetspotRating.sum": -rating },
+            $pull: { reviews: { _id: new ObjectId(reviewId) } }
         }
     );
-    if (!findAndUpdateSpot) throw "deleteSpotRating: comment could not be deleted from the spot.";
+    if (result.modifiedCount !== 1) throw "deleteReview: could not delete review.";
 
-    return findAndUpdateSpot;
+    return {reviewDeleted: true};
 };
 
 export const getAllSpots = async (

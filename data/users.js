@@ -9,6 +9,7 @@ export const createUser = async (
     firstName,
     lastName,
     email,
+    username,
     password,
     gender,
     primaryLocation,
@@ -16,7 +17,7 @@ export const createUser = async (
 ) => {
     //Input validation
 
-    if (!firstName || !lastName || !email || !password || !gender || !primaryLocation) throw "createUser: all fields must be supplied to create a user.";
+    if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation) throw "createUser: all fields must be supplied to create a user.";
 
     //Name validation: first and last name must be strings between 2 and 20 characters in length only containing letters
     const name_regex = /^[a-zA-Z]{2,20}$/;
@@ -32,6 +33,13 @@ export const createUser = async (
     const usersCollection = await users();
     const existingEmail = await usersCollection.findOne({ "email": email });
     if (existingEmail) throw "createUser: a user with that email already exists in the database!";
+
+    //Username validation: 3-20 chars, letters/numbers/underscores, must be unique
+    const username_regex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (typeof username !== "string" || username.trim().length === 0 || !username_regex.test(username.trim())) throw "createUser: username parameter must be a string between 3 and 20 characters in length only containing letters, numbers, and underscores.";
+    username = username.trim().toLowerCase();
+    const existingUsername = await usersCollection.findOne({ "username": username });
+    if (existingUsername) throw "createUser: a user with that username already exists in the database!";
 
     //Password validation: must be at least 8 characters in length and contain at least one letter, number, and special character
     const password_regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ])[^ ]{8,}$/;
@@ -58,6 +66,7 @@ export const createUser = async (
         firstName: firstName,
         lastName: lastName,
         email: email,
+        username: username,
         membershipLevel: "standard",
         hashedPassword: await bcrypt.hash(password, saltRounds),
         gender: gender,
@@ -96,6 +105,7 @@ export const authenticateUser = async (email, password) => {
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
+        username: user.username,
         membershipLevel: user.membershipLevel,
         datePoints: user.datepoints,
         primaryLocation: user.primaryLocation,
@@ -131,7 +141,7 @@ export const updateUser = async (email, password, updateObj) => {
     if(typeof updateObj !== 'object' || Array.isArray(updateObj)) throw 'update object must be an object';
     if(Object.keys(updateObj).length === 0) throw 'update object cannot be empty';
   
-    let validKeys = ["firstName", "lastName", "email", "gender", "primaryLocation", "secondaryLocation",];
+    let validKeys = ["firstName", "lastName", "email", "username", "gender", "primaryLocation", "secondaryLocation",];
     for(let key in updateObj){
       if(!validKeys.includes(key)) throw "Invalid key in update object";
     }
@@ -139,9 +149,10 @@ export const updateUser = async (email, password, updateObj) => {
     //error check
     const validated = await helpers.validateUser(
         updateObj.firstName, updateObj.lastName, updateObj.email,
-        updateObj.password, null, updateObj.gender,
+        updateObj.username, updateObj.password, null, updateObj.gender,
         updateObj.primaryLocation, updateObj.secondaryLocation,
-        true  // isUpdating flag
+        true,  // isUpdating flag
+        user._id
     );
 
     let updateFields = {};
@@ -151,8 +162,11 @@ export const updateUser = async (email, password, updateObj) => {
     if(Object.hasOwn(updateObj, 'lastName')){          
         updateFields.lastName = validated.lastName;
     }
-    if(Object.hasOwn(updateObj, 'email')){           
+    if(Object.hasOwn(updateObj, 'email')){
         updateFields.email = validated.email;
+    }
+    if(Object.hasOwn(updateObj, 'username')){
+        updateFields.username = validated.username;
     }
     if(Object.hasOwn(updateObj, 'gender')){            
         updateFields.gender = validated.gender;

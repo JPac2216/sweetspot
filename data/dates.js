@@ -191,6 +191,104 @@ export const privateDate = async (
     return privateDateVisibility;
 };
 
+export const addComment = async (
+    userId,
+    dateId,
+    comment
+) => {
+    if (!userId || typeof userId !== "string") throw "addComment: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "addComment: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "addComment: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "addComment: dateId parameter must be a valid ObjectId.";
+
+    if (typeof comment !== "string" || !comment.trim()) throw "addComment: comment must be supplied and must not be a string of empty spaces.";
+    comment = comment.trim();
+    if (comment.length > 250) throw "addComment: comment cannot be longer than 250 characters.";
+
+    const datesCollection = await dates();
+    const userCollection = await users();
+    const currentTime = helper.getDateTime();
+
+    const userObj = await userCollection.findOne({_id: new ObjectId(userId)});
+    if (!userObj) throw "addComment: no user exists with id provided.";
+    const username = userObj.username;
+
+    const commentObj = {
+        _id: new ObjectId(),
+        userId: new ObjectId(userId),
+        username,
+        comment,
+        createdAt: currentTime,
+        editedAt: null
+    }
+    const dateWithComment = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $push: {comments: commentObj} }, { returnDocument: "after" });
+
+    if (!dateWithComment) throw "addComment: comment could not be added.";
+    commentObj._id = commentObj._id.toString();
+    commentObj.userId = commentObj.userId.toString();
+    return commentObj;
+}
+
+export const deleteComment = async (
+    userId,
+    dateId,
+    commentId
+) => {
+    if (!userId || typeof userId !== "string") throw "deleteComment: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "deleteComment: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "deleteComment: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "deleteComment: dateId parameter must be a valid ObjectId.";
+
+    if (!commentId || typeof commentId !== "string") throw "deleteComment: commentId parameter must be supplied as a string.";
+    commentId = commentId.trim();
+    if (!ObjectId.isValid(commentId)) throw "deleteComment: commentId parameter must be a valid ObjectId.";
+
+    const datesCollection = await dates();
+
+    const dateWithComment = await datesCollection.updateOne({ _id: new ObjectId(dateId) }, { $pull: {comments: {_id: new ObjectId(commentId), userId: new ObjectId(userId)}} });
+
+    if (dateWithComment.modifiedCount !== 1) throw "deleteComment: comment could not be deleted.";
+
+    return {commentDeleted: true};
+}
+
+export const editComment = async (
+    userId,
+    dateId,
+    commentId,
+    comment
+) => {
+    if (!userId || typeof userId !== "string") throw "editComment: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "editComment: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "editComment: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "editComment: dateId parameter must be a valid ObjectId.";
+
+    if (!commentId || typeof commentId !== "string") throw "editComment: commentId parameter must be supplied as a string.";
+    commentId = commentId.trim();
+    if (!ObjectId.isValid(commentId)) throw "editComment: commentId parameter must be a valid ObjectId.";
+
+    if (typeof comment !== "string" || !comment.trim()) throw "editComment: comment must be supplied and must not be a string of empty spaces.";
+    comment = comment.trim();
+    if (comment.length > 250) throw "editComment: comment cannot be longer than 250 characters.";
+
+    const datesCollection = await dates();
+    const currentTime = helper.getDateTime();
+
+    const dateWithComment = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId), comments: { $elemMatch: {_id: new ObjectId(commentId), userId: new ObjectId(userId)}}}, { $set: {"comments.$.editedAt": currentTime, "comments.$.comment": comment}}, { returnDocument: "after" });
+
+    if (!dateWithComment) throw "editComment: comment could not be edited.";
+
+    return dateWithComment.comments.find(c => c._id.equals(commentId));
+}
 export const getAllPublicDates = async () => {
     const datesCollection = await dates();
     const findAllPublicDates = await datesCollection.find({ visibility: "public" }).toArray();
