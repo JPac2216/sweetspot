@@ -1,21 +1,10 @@
-<h1 id="appTitle">{{title}}</h1>
-<p id="siteDescription">
-    Welcome to SweetSpot, your one-spot solution for planning a date with that special someone in the NYC area!
-</p>
+<div class="landing">
+    <img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo-hero">
 
-<!-- 
-THIS IS ONLY HERE AS A PLACEHOLDER!
-WE HAVE TO CHANGE THIS LATER ON DOWN THE LINE!
--->
+    <p class="about-note">Find and share the best date spots in the city.</p>
 
-{{#unless loggedIn}}
-    <a id="registerlink" href="/register">Register Here</a>
-    <a id="signinlink" href="/signin">Sign In Here</a>
-{{else}}
-    {{#if normalMember}}
-        <a id="memberlink" href="/member">Member Page</a>
-    {{else}}
-        <a id="memberlink" href="/member">Member Page</a>
-        <a id="managerlink" href="/manager">Manager Page</a>
-    {{/if}}
-{{/unless}}
+    <div class="landing-buttons">
+        <a href="/register" class="btn">New User?</a>
+        <a href="/login" class="btn btn-filled">Login Existing</a>
+    </div>
+</div>

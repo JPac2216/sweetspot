@@ -1,0 +1,59 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <form class="filter-bar" method="GET">
+
+        <div class="filter-group">
+            <button type="button" class="btn filter-toggle" onclick="toggleFilter(this)">Tags</button>
+            <div class="filter-dropdown">
+                <label><input type="checkbox" name="tags" value="outdoor"> Outdoor</label>
+                <label><input type="checkbox" name="tags" value="indoor"> Indoor</label>
+                <label><input type="checkbox" name="tags" value="food"> Food</label>
+                <label><input type="checkbox" name="tags" value="free"> Free</label>
+                <label><input type="checkbox" name="tags" value="nightlife"> Nightlife</label>
+                <label><input type="checkbox" name="tags" value="romantic"> Romantic</label>
+                <label><input type="checkbox" name="tags" value="adventure"> Adventure</label>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <button type="button" class="btn filter-toggle" onclick="toggleFilter(this)">Cost</button>
+            <div class="filter-dropdown">
+                <label><input type="radio" name="cost" value=""> Any</label>
+                <label><input type="radio" name="cost" value="1"> $ </label>
+                <label><input type="radio" name="cost" value="2"> $$ </label>
+                <label><input type="radio" name="cost" value="3"> $$$ </label>
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-filled">Apply</button>
+    </form>
+
+    <div class="card-grid">
+        {{#each spots}}
+        <a href="/spots/{{this._id}}" class="date-card">
+            <div class="date-card-title">{{this.name}}</div>
+            <div class="date-meta">{{this.address.borough}} / {{this.address.street}}</div>
+            {{#if this.sweetspotRating.average}}
+            <div class="date-meta">Rating: {{this.sweetspotRating.average}} ({{this.sweetspotRating.count}} reviews)</div>
+            {{else}}
+            <div class="date-meta">No ratings yet</div>
+            {{/if}}
+        </a>
+        {{else}}
+        <p>No spots found for your location.</p>
+        {{/each}}
+    </div>
+
+    <p>Locations based on your profile settings</p>
+</div>
+
+{{> filterDropdown}}

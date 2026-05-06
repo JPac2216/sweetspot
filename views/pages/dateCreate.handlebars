@@ -1,0 +1,77 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <form action="/date/create" method="POST">
+        <div class="form-group">
+            <label>Title</label>
+            <input type="text" name="title" value="{{date.title}}" placeholder="Date title" required>
+        </div>
+        <div class="form-group">
+            <label>Tags </label>
+            <input type="text" name="tags" value="{{date.tagsRaw}}" placeholder="outdoor, free, food">
+        </div>
+        <div class="form-group">
+            <label>Visibility</label>
+            <select name="visibility">
+                <option value="public">Public</option>
+                <option value="private">Private</option>
+            </select>
+        </div>
+
+        <h2 class="section-title">Spots</h2>
+        <p>Add spots from a location page. Use arrows to reorder.</p>
+
+        <div class="event-steps" id="spotList">
+            {{#each events}}
+            <div class="event-step">
+                <div class="event-card">
+                    <input type="hidden" name="events[{{@index}}][spotId]" value="{{this.spotId}}">
+                    <input type="hidden" name="events[{{@index}}][spotName]" value="{{this.spotName}}">
+                    <input type="hidden" name="events[{{@index}}][order]" class="order-input" value="{{this.order}}">
+
+                    <div>
+                        <button type="button" class="btn-move-left vote-btn" onclick="moveCard(this,-1)" title="Move left">&#8678;</button>
+                        <button type="button" class="btn-move-right vote-btn" onclick="moveCard(this,1)" title="Move right">&#8680;</button>
+                    </div>
+
+                    <strong>{{this.spotName}}</strong>
+                    <p>{{this.borough}}</p>
+
+                    <div class="tags">
+                        {{#each this.tags}}
+                        <span class="tag">{{this}}</span>
+                        {{/each}}
+                    </div>
+
+                    <p>
+                        {{#if this.sweetspotRating.average}}Rating: {{this.sweetspotRating.average}}{{/if}}{{#if this.estimatedCost}} / ${{this.estimatedCost}}{{/if}}
+                    </p>
+                </div>
+            </div>
+            {{#unless @last}}<span class="step-arrow">&#8594;</span>{{/unless}}            {{else}}
+            <p>No spots added yet — visit a location page and use "Add to Date".</p>
+            {{/each}}
+        </div>
+
+        <div class="form-group">
+            <label>Notes</label>
+            <textarea name="notes" placeholder="Special Notes...">{{date.notes}}</textarea>
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" name="action" value="publish" class="btn btn-filled">Save / Publish</button>
+            <button type="submit" name="action" value="save" class="btn">Save Draft</button>
+            <button type="button" class="btn btn-red">Delete</button>
+        </div>
+    </form>
+</div>
+
+{{> dateCreate}}
