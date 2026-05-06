@@ -76,6 +76,7 @@ export const validateUser = async (
     firstName,
     lastName,
     email,
+    username,
     password,
     confirmPassword,
     gender,
@@ -85,7 +86,7 @@ export const validateUser = async (
 ) => {
     // Only require all fields when creating
     if (!isUpdating) {
-        if (!firstName || !lastName || !email || !password || !gender || !primaryLocation || !confirmPassword){
+        if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation || !confirmPassword){
             throw 'All fields must be supplied to create a user.';
         }
         if (confirmPassword !== password){
@@ -124,6 +125,19 @@ export const validateUser = async (
         }
     }
 
+    if (!isUpdating || username) {
+        const username_regex = /^[a-zA-Z0-9_]{3,20}$/;
+        if (typeof username !== "string" || username.trim().length === 0 || !username_regex.test(username.trim())){
+            throw "Username must be a string between 3 and 20 characters in length only containing letters, numbers, and underscores.";
+        }
+        username = username.trim().toLowerCase();
+        const usersCollection = await users();
+        const existingUsername = await usersCollection.findOne({ "username": username });
+        if (existingUsername){
+            throw "A user with that username already exists in the database!";
+        }
+    }
+
     if (!isUpdating || password) {
         const password_regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ])[^ ]{8,}$/;
         if (typeof password !== "string" || password.trim().length === 0 || !password_regex.test(password.trim())){
@@ -159,5 +173,5 @@ export const validateUser = async (
         secondaryLocation = secondaryLocation.trim().toLowerCase();
     }
 
-    return { firstName, lastName, email, password, gender, primaryLocation, secondaryLocation };
+    return { firstName, lastName, email, username, password, gender, primaryLocation, secondaryLocation };
 };
