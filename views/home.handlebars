@@ -1,0 +1,21 @@
+<h1 id="appTitle">{{title}}</h1>
+<p id="siteDescription">
+    Welcome to SweetSpot, your one-spot solution for planning a date with that special someone in the NYC area!
+</p>
+
+<!-- 
+THIS IS ONLY HERE AS A PLACEHOLDER!
+WE HAVE TO CHANGE THIS LATER ON DOWN THE LINE!
+-->
+
+{{#unless loggedIn}}
+    <a id="registerlink" href="/register">Register Here</a>
+    <a id="signinlink" href="/signin">Sign In Here</a>
+{{else}}
+    {{#if normalMember}}
+        <a id="memberlink" href="/member">Member Page</a>
+    {{else}}
+        <a id="memberlink" href="/member">Member Page</a>
+        <a id="managerlink" href="/manager">Manager Page</a>
+    {{/if}}
+{{/unless}}

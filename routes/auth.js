@@ -8,7 +8,7 @@ router
   .route('/')
   .get(async (req, res) => {
     //code here for GET
-    res.render('signin', {title: 'Sign In'});
+    res.status(200).render('signin', {title: 'Sign In'});
     });
 
 
@@ -16,7 +16,7 @@ router
   .route('/signin')
   .get(async (req, res) => {
     //code here for GET
-    res.render('signin', {title: 'Sign In'});
+    res.status(200).render('signin', {title: 'Sign In'});
   })
   .post(async (req, res) => {
     //code here for POST
@@ -79,7 +79,7 @@ router
   .route('/register')
   .get(async (req, res) => {
     //code here for GET
-    res.render('register', {title: 'Register'});
+    res.status(200).render('register', {title: 'Register'});
   })
   .post(async (req, res) => {
     //code here for POST
