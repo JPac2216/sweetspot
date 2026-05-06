@@ -4,19 +4,20 @@
 import * as helper from '../../helpers.js';
 
 (function () {
-    const createUserForm = document.getElementById('createUserForm'); // CHANGE THIS LATER TO THE ID IN THE HTML THAT WE USE.
-    const updateUserForm = document.getElementById('updateUserForm'); // CHANGE THIS LATER TO THE ID IN THE HTML THAT WE USE.
-    const submitSpotAppealForm = document.getElementById('submitSpotAppealForm'); // CHANGE THIS LATER TO THE ID IN THE HTML THAT WE USE.
+    const createUserForm = document.getElementById('signup-form'); // CHANGE THIS LATER TO THE ID IN THE HTML THAT WE USE.
+    const updateUserForm = document.getElementById('edituser-form'); // CHANGE THIS LATER TO THE ID IN THE HTML THAT WE USE.
+    const submitSpotAppealForm = document.getElementById('appeal-form'); // CHANGE THIS LATER TO THE ID IN THE HTML THAT WE USE.
 
 
     if (createUserForm) {
-        const firstNameInput = document.getElementById('firstNameInput');
-        const lastNameInput = document.getElementById('lastNameInput');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const genderInput = document.getElementById('genderInput');
-        const primaryLocationInput = document.getElementById('primaryLocationInput');
-        const secondaryLocationInput = document.getElementById('secondaryLocationInput');
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const genderInput = document.getElementById('gender');
+        const primaryLocationInput = document.getElementById('primaryLocation');
+        const secondaryLocationInput = document.getElementById('secondaryLocation');
 
         const errorContainer = document.getElementById('error-container');
         const errorTextElement = errorContainer.getElementsByClassName('text-goes-here')[0];
@@ -33,11 +34,14 @@ import * as helper from '../../helpers.js';
                 const lastNameInputValue = lastNameInput.value;
                 const emailInputValue = emailInput.value;
                 const passwordInputValue = passwordInput.value;
+                const confirmPasswordInputValue = confirmPasswordInput.value;
                 const genderInputValue = genderInput.value;
                 const primaryLocationInputValue = primaryLocationInput.value;
                 const secondaryLocationInputValue = secondaryLocationInput.value;
 
-                const validateCreateUser = helper.validateCreateUser( // THIS FUNCTION NEEDS TO BE CREATED IN THE HELPER FILE
+                if (passwordInputValue !== confirmPasswordInputValue) throw "Password and confirmed password must be the same!";
+
+                const validateUser = helper.validateUser(
                     firstNameInputValue,
                     lastNameInputValue,
                     emailInputValue,
@@ -47,10 +51,9 @@ import * as helper from '../../helpers.js';
                     secondaryLocationInputValue
                 );
 
-                if (!validateCreateUser) throw "validateCreateUser: Could not validate the parameters.";
+                if (!validateUser) throw "validateUser: Could not validate the parameters.";
 
-                const dl = document.createElement('dl');
-                dl.innerHTML = ``; // PUT SOMETHING HERE
+                createUserForm.submit();
 
             } catch (e) {
                 const message = typeof e === "string" ? e : e.message;
@@ -63,13 +66,14 @@ import * as helper from '../../helpers.js';
     }
 
     if (updateUserForm) {
-        const firstNameInput = document.getElementById('firstNameInput');
-        const lastNameInput = document.getElementById('lastNameInput');
-        const emailInput = document.getElementById('emailInput');
-        const passwordInput = document.getElementById('passwordInput');
-        const genderInput = document.getElementById('genderInput');
-        const primaryLocationInput = document.getElementById('primaryLocationInput');
-        const secondaryLocationInput = document.getElementById('secondaryLocationInput');
+        const firstNameInput = document.getElementById('firstName');
+        const lastNameInput = document.getElementById('lastName');
+        const emailInput = document.getElementById('email');
+        const passwordInput = document.getElementById('password');
+        const confirmPasswordInput = document.getElementById('confirmPassword');
+        const genderInput = document.getElementById('gender');
+        const primaryLocationInput = document.getElementById('primaryLocation');
+        const secondaryLocationInput = document.getElementById('secondaryLocation');
 
         const errorContainer = document.getElementById('error-container');
         const errorTextElement = errorContainer.getElementsByClassName('text-goes-here')[0];
@@ -86,11 +90,14 @@ import * as helper from '../../helpers.js';
                 const lastNameInputValue = lastNameInput.value;
                 const emailInputValue = emailInput.value;
                 const passwordInputValue = passwordInput.value;
+                const confirmPasswordInputValue = confirmPasswordInput.value;
                 const genderInputValue = genderInput.value;
                 const primaryLocationInputValue = primaryLocationInput.value;
                 const secondaryLocationInputValue = secondaryLocationInput.value;
 
-                const validateCreateUser = helper.validateCreateUser( // THIS FUNCTION NEEDS TO BE CREATED IN THE HELPER FILE
+                if (passwordInputValue !== confirmPasswordInputValue) throw "Password and confirmed password must be the same!";
+
+                const validateUser = helper.validateUser( // THIS FUNCTION NEEDS TO BE CREATED IN THE HELPER FILE
                     firstNameInputValue,
                     lastNameInputValue,
                     emailInputValue,
@@ -98,15 +105,14 @@ import * as helper from '../../helpers.js';
                     genderInputValue,
                     primaryLocationInputValue,
                     secondaryLocationInputValue,
-                    updating=true // THIS WILL BE A DEFAULT PARAM SET TO FALSE
+                    isUpdating=true // THIS WILL BE A DEFAULT PARAM SET TO FALSE
                     // THE REASON FOR THIS IS TO TELL THE VALIDATOR WHETHER WE
                     // ARE REQUIRING ALL PARAMETERS TO CREATE THE USER OR NOT.
                 );
 
-                if (!validateCreateUser) throw "validateCreateUser: Could not validate the parameters.";
+                if (!validateUser) throw "validateUser: Could not validate the parameters.";
 
-                const dl = document.createElement('dl');
-                dl.innerHTML = ``; // PUT SOMETHING HERE
+                updateUserForm.submit();
 
             } catch (e) {
                 const message = typeof e === "string" ? e : e.message;
@@ -119,9 +125,11 @@ import * as helper from '../../helpers.js';
     }
 
     if (submitSpotAppealForm) {
-        const nameInput = document.getElementById('nameInput');
-        const descriptionInput = document.getElementById('descriptionInput');
-        const addressInput = document.getElementById('addressInput');
+        const nameInput = document.getElementById('name');
+        const descriptionInput = document.getElementById('description');
+        const streetInput = document.getElementById('street');
+        const boroughInput = document.getElementById('borough');
+        const zipInput = document.getElementById('zip');
         
         const errorContainer = document.getElementById('error-container');
         const errorTextElement = errorContainer.getElementsByClassName('text-goes-here')[0];
@@ -136,7 +144,11 @@ import * as helper from '../../helpers.js';
 
                 const nameInputValue = nameInput.value;
                 const descriptionInputValue = descriptionInput.value;
-                const addressInputValue = addressInput.value;
+                const addressInputValue = {
+                    "street": streetInput.value,
+                    "borough": boroughInput.value,
+                    "zip": zipInput.value
+                };
 
                 const validateSpotAppeal = helper.validateSpotFields(
                     nameInputValue,
@@ -146,8 +158,8 @@ import * as helper from '../../helpers.js';
 
                 if (!validateSpotAppeal) throw "appealSpot: could not validate the appeal inputs.";
 
-                const dl = document.createElement('dl');
-                dl.innerHTML = ``; // PUT SOMETHING HERE
+                submitSpotAppealForm.submit();
+
             } catch (e) {
                 const message = typeof e === "string" ? e : e.message;
                 errorTextElement.textContent = message;

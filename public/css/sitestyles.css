@@ -1,0 +1,510 @@
+/*  Reset  */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* ── Variables  */
+:root {
+    --bg:    #0d0d0d;
+    --card:  #1a1a1a;
+    --pink:  #db85c1;
+    --blue:  #1a6ee8;
+    --white: #ffffff;
+    --muted: #888888;
+}
+
+/*  Base  */
+body {
+    background: var(--bg);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+}
+
+a { text-decoration: none; color: inherit; }
+
+/*  Logo  */
+.logo {
+    height: 2.4rem;
+    width: auto;
+    display: block;
+}
+
+.logo-hero {
+    height: 5rem;
+    width: auto;
+    display: block;
+}
+
+/*  Navbar  */
+.navbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 2rem;
+    border-bottom: 1px solid #222;
+}
+
+.nav-links {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.nav-btn {
+    padding: 0.4rem 1.1rem;
+    border: 1.5px solid var(--pink);
+    border-radius: 999px;
+    color: var(--white);
+    font-size: 0.9rem;
+    transition: background 0.2s;
+}
+
+.nav-btn:hover { background: var(--pink); }
+
+.nav-btn-blue {
+    border-color: var(--blue);
+    background: var(--blue);
+}
+
+.nav-btn-blue:hover { background: #1558c0; border-color: #1558c0; }
+
+.nav-icon {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 2px solid var(--pink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pink);
+    font-size: 1.1rem;
+    flex-shrink: 0;
+}
+
+.nav-icon svg { display: block; }
+
+/*  Buttons  */
+.btn {
+    padding: 0.55rem 1.4rem;
+    border-radius: 6px;
+    font-size: 0.9rem;
+    font-family: 'Inter', sans-serif;
+    cursor: pointer;
+    display: inline-block;
+    border: 1.5px solid var(--pink);
+    color: var(--white);
+    background: transparent;
+    transition: background 0.2s;
+}
+
+.btn:hover { background: var(--pink); }
+
+.btn-filled { background: var(--pink); }
+
+.btn-blue {
+    border-color: var(--blue);
+    background: var(--blue);
+}
+
+.btn-blue:hover { background: #1558c0; }
+
+.btn-red { border-color: #e84444; color: #e84444; background: transparent; }
+.btn-red:hover { background: #e84444; color: var(--white); }
+
+/* ── Cards ──────────────────────────────────── */
+.card {
+    background: var(--card);
+    border: 1.5px solid var(--pink);
+    border-radius: 10px;
+    padding: 1rem;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+}
+
+/* ── Forms ──────────────────────────────────── */
+.form-group { margin-bottom: 1rem; }
+
+label {
+    display: block;
+    margin-bottom: 0.3rem;
+    font-size: 0.9rem;
+    color: var(--pink);
+}
+
+input, textarea, select {
+    background: #111;
+    border: 1.5px solid var(--pink);
+    border-radius: 6px;
+    color: var(--white);
+    padding: 0.5rem 0.75rem;
+    font-family: 'Inter', sans-serif;
+    font-size: 0.9rem;
+    width: 100%;
+}
+
+input::placeholder, textarea::placeholder { color: var(--muted); }
+
+textarea { resize: vertical; min-height: 80px; }
+
+/* ── Page wrapper ───────────────────────────── */
+.page { padding: 2rem; }
+
+.page-title {
+    font-size: 1.4rem;
+    color: var(--pink);
+    margin-bottom: 1.25rem;
+}
+
+/* ── Section headings ───────────────────────── */
+.section-title {
+    font-size: 1rem;
+    color: var(--pink);
+    margin-bottom: 0.75rem;
+    font-weight: 600;
+}
+
+/* ── Landing page ───────────────────────────── */
+.landing {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    gap: 1.5rem;
+    padding: 2rem;
+    text-align: center;
+}
+
+.landing .logo { font-size: 3.5rem; }
+
+
+.about-note {
+    font-size: 0.85rem;
+    color: var(--muted);
+    font-style: italic;
+}
+
+.landing-buttons {
+    display: flex;
+    gap: 1rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+/* ── Login / Register ───────────────────────── */
+.auth-page {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 2rem;
+    gap: 1.5rem;
+}
+
+.auth-box {
+    width: 100%;
+    max-width: 420px;
+    border: 1.5px solid var(--pink);
+    border-radius: 10px;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.auth-box .btn-row {
+    display: flex;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.auth-box .hint {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+/* ── Filter bar ─────────────────────────────── */
+.filter-bar {
+    display: flex;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    margin-bottom: 1.5rem;
+}
+
+.filter-group { position: relative; }
+
+.filter-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+    font-size: 0.85rem;
+}
+
+.filter-toggle.active { background: var(--pink); }
+
+.filter-dropdown {
+    position: absolute;
+    top: calc(100% + 0.4rem);
+    left: 0;
+    background: var(--card);
+    border: 1.5px solid var(--pink);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+    display: none;
+    flex-direction: column;
+    gap: 0.5rem;
+    min-width: 180px;
+    z-index: 10;
+}
+
+.filter-dropdown.open { display: flex; }
+
+.filter-dropdown label {
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    cursor: pointer;
+}
+
+.filter-dropdown input[type="checkbox"],
+.filter-dropdown input[type="radio"] {
+    width: auto;
+    accent-color: var(--pink);
+}
+
+/* ── Explore date feed ──────────────────────── */
+.date-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+    max-width: 640px;
+}
+
+/* ── Explore date card ──────────────────────── */
+.date-card {
+    background: var(--card);
+    border: 1.5px solid var(--pink);
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.5rem;
+}
+
+.date-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+}
+
+.date-card-title { font-size: 1rem; font-weight: 600; }
+
+.favorite-btn {
+    background: none;
+    border: none;
+    color: var(--muted);
+    font-size: 1.3rem;
+    cursor: pointer;
+    transition: color 0.2s;
+}
+
+.favorite-btn.active { color: var(--pink); }
+.favorite-btn:hover { color: var(--pink); }
+
+.date-meta {
+    font-size: 0.8rem;
+    color: var(--muted);
+}
+
+.tags { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+
+.tag {
+    font-size: 0.75rem;
+    border: 1px solid var(--pink);
+    border-radius: 999px;
+    padding: 0.15rem 0.6rem;
+    color: var(--pink);
+}
+
+.vote-row {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    font-size: 0.85rem;
+}
+
+.vote-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    display: flex;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+    border: 1px solid transparent;
+    color: var(--white);
+    transition: border-color 0.2s;
+}
+
+.vote-btn.up:hover { border-color: var(--blue); color: var(--blue); }
+.vote-btn.down:hover { border-color: #e84444; color: #e84444; }
+
+/* ── Event steps (date detail / create) ─────── */
+.event-steps {
+    display: flex;
+    align-items: flex-start;
+    gap: 0.5rem;
+    overflow-x: auto;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1.5rem;
+}
+
+.event-step { display: flex; align-items: center; gap: 0.5rem; }
+
+.event-card {
+    background: var(--card);
+    border: 2px dashed var(--pink);
+    border-radius: 10px;
+    width: 180px;
+    min-height: 140px;
+    padding: 0.75rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    flex-shrink: 0;
+}
+
+.event-card p { font-size: 0.85rem; color: var(--muted); }
+.event-card strong { font-size: 0.9rem; }
+
+.step-arrow { color: var(--pink); font-size: 1.4rem; flex-shrink: 0; }
+
+.add-event-btn {
+    width: 180px;
+    min-height: 140px;
+    border: 2px dashed #444;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 2rem;
+    color: #444;
+    cursor: pointer;
+    background: none;
+    flex-shrink: 0;
+    transition: border-color 0.2s, color 0.2s;
+}
+
+.add-event-btn:hover { border-color: var(--pink); color: var(--pink); }
+
+/* ── Reviews / Comments ─────────────────────── */
+.reviews-section { margin-top: 2rem; }
+
+.review-lines { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 0.75rem; }
+
+.review-line {
+    height: 2px;
+    background: var(--pink);
+    border-radius: 1px;
+    opacity: 0.4;
+}
+
+.review-line:nth-child(2) { width: 85%; }
+.review-line:nth-child(3) { width: 65%; }
+
+/* ── Profile sections ───────────────────────── */
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 2rem;
+}
+
+.profile-avatar {
+    width: 3.5rem;
+    height: 3.5rem;
+    border: 2px solid var(--pink);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: var(--pink);
+    font-size: 1.5rem;
+    flex-shrink: 0;
+}
+
+.profile-name { font-size: 1.2rem; font-weight: 600; }
+
+.profile-section { margin-bottom: 2rem; }
+
+/* ── Appeal card ────────────────────────────── */
+.appeal-card {
+    background: var(--card);
+    border: 1.5px solid var(--pink);
+    border-radius: 10px;
+    padding: 1rem;
+    display: flex;
+    flex-direction: column;
+    gap: 0.75rem;
+}
+
+.appeal-meta { font-size: 0.85rem; color: var(--muted); }
+.appeal-actions { display: flex; gap: 0.5rem; }
+
+/* ── Spot / appeal creation form ────────────── */
+.form-page {
+    max-width: 520px;
+    margin: 2rem auto;
+}
+
+.form-box {
+    border: 1.5px solid var(--pink);
+    border-radius: 10px;
+    padding: 2rem;
+}
+
+.tag-options { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 0.5rem; }
+
+.tag-option {
+    width: 2.2rem;
+    height: 2.2rem;
+    border: 1.5px solid var(--pink);
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+
+.tag-option:hover, .tag-option.selected { background: var(--pink); }
+
+.form-actions {
+    display: flex;
+    gap: 0.75rem;
+    margin-top: 1.25rem;
+    flex-wrap: wrap;
+    align-items: center;
+}
+
+/* ── Admin flagged ──────────────────────────── */
+.flagged-card {
+    background: var(--card);
+    border: 1.5px solid #e84444;
+    border-radius: 10px;
+    padding: 1rem;
+    cursor: pointer;
+    transition: border-color 0.2s;
+}
+
+.flagged-card:hover { border-color: #ff6666; }
+
+.form-inline { display: inline; }
