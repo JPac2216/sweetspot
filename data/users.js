@@ -63,20 +63,88 @@ export const createUser = async (
     }
 
     let userObj = {
-        firstName: firstName,
-        lastName: lastName,
-        email: email,
-        username: username,
-        membershipLevel: "standard",
+        _id: new ObjectId(),
+        firstName,
+        lastName,
+        email,
         hashedPassword: await bcrypt.hash(password, saltRounds),
-        gender: gender,
-        primaryLocation: primaryLocation,
-        secondaryLocation: secondaryLocation,
+        gender,
+        primaryLocation,
+        secondaryLocation,
         datepoints: 0,
-        savedSchedules: []
+        savedSchedules: [], 
+        favoriteDates: [], 
+        membershipLevel: "member"
     };
+
     const success = await usersCollection.insertOne(userObj);
     if (!success) throw "createUser: couldn't register user into the database.";
+    return { "memberCreated": true };
+};
+
+export const addFavorite = async (userId, dateId) => {
+    if (!userId) throw "addFavorite: userId must be supplied.";
+    if (!ObjectId.isValid(userId)) throw "addFavorite: userId is not a valid ObjectId.";
+    if (!dateId) throw "addFavorite: dateId must be supplied.";
+    if (!ObjectId.isValid(dateId)) throw "addFavorite: dateId is not a valid ObjectId.";
+
+    const usersCollection = await users();
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (!user) throw "addFavorite: no user found with that id.";
+
+    await getDateById(dateId);
+
+    const alreadySaved = user.favoriteDates.some(id => id.toString() === dateId);
+    if (alreadySaved) throw "addFavorite: date is already in the user's favorites.";
+
+    const update = await usersCollection.updateOne(
+        { _id: new ObjectId(userId) },
+        { $push: { favoriteDates: new ObjectId(dateId) } }
+    );
+    if (update.modifiedCount === 0) throw "addFavorite: couldn't add date to favorites.";
+
+    return { favoriteAdded: true };
+};
+
+export const deleteFavorite = async (userId, dateId) => {
+    if (!userId) throw "deleteFavorite: userId must be supplied.";
+    if (!ObjectId.isValid(userId)) throw "deleteFavorite: userId is not a valid ObjectId.";
+    if (!dateId) throw "deleteFavorite: dateId must be supplied.";
+    if (!ObjectId.isValid(dateId)) throw "deleteFavorite: dateId is not a valid ObjectId.";
+
+    const usersCollection = await users();
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (!user) throw "deleteFavorite: no user found with that id.";
+
+    const isSaved = user.favoriteDates.some(id => id.toString() === dateId);
+    if (!isSaved) throw "deleteFavorite: date is not in the user's favorites.";
+
+    const update = await usersCollection.updateOne(
+        { _id: new ObjectId(userId) },
+        { $pull: { favoriteDates: new ObjectId(dateId) } }
+    );
+    if (update.modifiedCount === 0) throw "deleteFavorite: couldn't remove date from favorites.";
+
+    return { favoriteDeleted: true };
+};
+
+export const showAllFavorites = async (userId) => {
+    if (!userId) throw "showAllFavorites: userId must be supplied.";
+    if (!ObjectId.isValid(userId)) throw "showAllFavorites: userId is not a valid ObjectId.";
+
+    const usersCollection = await users();
+    const user = await usersCollection.findOne({ _id: new ObjectId(userId) });
+    if (!user) throw "showAllFavorites: no user found with that id.";
+
+    const datesCollection = await dates();
+
+    const favoriteDates = await datesCollection
+        .find({ _id: { $in: user.favoriteDates } })
+        .toArray();
+
+    favoriteDates.forEach(date => { date._id = date._id.toString(); });
+
+    return favoriteDates;
     return { "userCreated": true };
 };
 
