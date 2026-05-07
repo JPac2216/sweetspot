@@ -2,6 +2,7 @@ import { dates, members, spots, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcrypt';
 import * as helpers from '../helpers.js';
+import { getDateById } from './dates.js';
 const saltRounds = 16;
 
 
@@ -145,7 +146,6 @@ export const showAllFavorites = async (userId) => {
     favoriteDates.forEach(date => { date._id = date._id.toString(); });
 
     return favoriteDates;
-    return { "userCreated": true };
 };
 
 
@@ -175,7 +175,7 @@ export const authenticateUser = async (email, password) => {
         email: user.email,
         username: user.username,
         membershipLevel: user.membershipLevel,
-        datePoints: user.datepoints,
+        datepoints: user.datepoints,
         primaryLocation: user.primaryLocation,
         secondaryLocation: user.secondaryLocation,
         savedSchedules: user.savedSchedules
@@ -262,7 +262,7 @@ export const getUserById = async (
     userId
 ) => {
     if (!userId) throw "getUserById: userId field must be supplied!";
-    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getUserById: userId field must be a string that is a valid ObjectId.";4
+    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getUserById: userId field must be a string that is a valid ObjectId.";
     userId = userId.trim();
 
     const usersCollection = await users();
