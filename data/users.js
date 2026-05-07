@@ -67,6 +67,7 @@ export const createUser = async (
         firstName,
         lastName,
         email,
+        username,
         hashedPassword: await bcrypt.hash(password, saltRounds),
         gender,
         primaryLocation,

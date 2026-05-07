@@ -175,3 +175,27 @@ export const validateUser = async (
 
     return { firstName, lastName, email, username, password, gender, primaryLocation, secondaryLocation };
 };
+
+export const checkObjectID = (id) => {
+    if (!id) throw 'You must provide an id to search for';
+    if (typeof id !== 'string') throw 'Id must be a string';
+    if (id.trim().length === 0)
+        throw 'Id cannot be an empty string or just spaces';
+    id = id.trim();
+    if (!ObjectId.isValid(id)) throw 'invalid object ID';
+
+    return id;
+};
+
+
+export const validateSpotFields = (name, description, address) => {
+    if (!name || !description || !address) throw "all parameters must be supplied.";
+    const basic_regex = /^[a-zA-Z0-9 ,#]{2,25}$/;
+    if (typeof name !== "string" || !basic_regex.test(name.trim())) throw "name must be a valid name consisting of letters, numbers, or spaces.";
+    if (typeof description !== "string" || !description.trim()) throw "description must be a non-empty string.";
+    const address_fields = ["street", "borough", "zip"];
+    if (!address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "address must contain only street, borough, and zip.";
+    if (!basic_regex.test(address.street)) throw "address.street must contain only letters, numbers, commas, spaces, or hashtags.";
+    if (!boroughs.includes(address.borough.toLowerCase())) throw "address.borough must be a recognized borough in our system.";
+    if (typeof address.zip !== "number" || Number.isNaN(address.zip) || !Number.isFinite(address.zip)) throw "address.zip must be a valid zip code.";
+};
