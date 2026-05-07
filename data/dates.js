@@ -83,13 +83,247 @@ export const createDate = async (
     return { "dateCreated": true };
 };
 
-export const getDateById = async (dateId) => {
-    if (!dateId) throw "getDateById: dateId must be supplied.";
-    if (!ObjectId.isValid(dateId)) throw "getDateById: dateId is not a valid ObjectId.";
+
+export const addToSchedule = async (
+    dateId,
+    dateSpotId,
+    notes
+) => {
+    if (!dateId || !dateSpotId || typeof dateId !== "string" || typeof dateSpotId !== "string") throw "addToSchedule: all parameters must be provided, dateId and dateSpotId must be of type string.";
+    dateId = dateId.trim();
+    dateSpotId = dateSpotId.trim();
+    if (!ObjectId.isValid(dateId) || !ObjectId.isValid(dateSpotId)) throw "addToSchedule: dateId and dateSpotId must be a valid ObjectIds.";
+
+    if (notes && typeof notes === "string") {
+        notes = notes.trim();
+    }
+    else if (notes && typeof notes !== "string") {
+        throw "addToSchedule: if supplying notes to this function, it must be of the type string.";
+    }
+    else {
+        notes = "";
+    }
+
+    const spotsCollection = await spots();
+    const dateSpot = await spotsCollection.findOne({ _id: new ObjectId(dateSpotId) });
+    if (!dateSpot) throw "addToSchedule: could not find dateSpot in the database.";
+    
+    const datesCollection = await dates();
+    const schedule = await datesCollection.findOne({ _id: new ObjectId(dateId) });
+    if (!schedule) throw "addToSchedule: could not find schedule in the database.";
+
+    const spotToInsert = {
+        "order": schedule.events.length + 1,
+        "spotId": dateSpot._id,
+        "spotName": dateSpot.name,
+        notes
+    };
+
+    let events = schedule.events;
+    events.push(spotToInsert);
+
+    const successfulAddition = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: { events } }, { returnDocument: "after" });
+    if (!successfulAddition) throw "addToSchedule: could not add the spot to the date specified.";
+
+    return successfulAddition;
+};
+
+
+export const deleteFromSchedule = async (
+    dateId,
+    dateSpotId
+) => {
+    if (!dateId || !dateSpotId || typeof dateId !== "string" || typeof dateSpotId !== "string") throw "addToSchedule: all parameters must be provided, dateId and dateSpotId must be of type string.";
+    dateId = dateId.trim();
+    dateSpotId = dateSpotId.trim();
+    if (!ObjectId.isValid(dateId) || !ObjectId.isValid(dateSpotId)) throw "deleteFromSchedule: dateId and dateSpotId must be a valid ObjectIds.";
 
     const datesCollection = await dates();
-    const date = await datesCollection.findOne({ _id: new ObjectId(dateId) });
-    if (!date) throw "getDateById: no date found with that id.";
+    const schedule = await datesCollection.findOne({ _id: new ObjectId(dateId) });
+    if (!schedule) throw "addToSchedule: could not find schedule in the database.";
 
-    return date;
+    let events = schedule.events;
+    let changed = false;
+    for (let i = 0; i < events.length; i++) {
+        if (events[i]._id === new ObjectId(dateSpotId)) {
+            events.splice(i, 1);
+            changed = true;
+            break;
+        }
+    }
+    if (!changed) throw "addToSchedule: unable to remove spot from the date schedule.";
+
+    const successfulAddition = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: { events } }, { returnDocument: "after" });
+    if (!successfulAddition) throw "addToSchedule: could not add the spot to the date specified.";
+
+    return successfulAddition;
+
 };
+
+
+export const publishDate = async (
+    dateId
+) => {
+    if (!dateId || typeof dateId !== "string") throw "publishDate: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "publishDate: dateId parameter must be a valid ObjectId.";
+
+    const datesCollection = await dates();
+    const publishDateVisibility = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: {visibility: "public" } }, { returnDocument: "after" });
+
+    if (!publishDateVisibility) throw "publishDate: date could not be published.";
+
+    return publishDateVisibility;
+};
+
+export const privateDate = async (
+    dateId
+) => {
+    if (!dateId || typeof dateId !== "string") throw "privateDate: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "publishDate: dateId parameter must be a valid ObjectId.";
+
+    const datesCollection = await dates();
+    const privateDateVisibility = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: {visibility: "private"} }, { returnDocument: "after" });
+
+    if (!privateDateVisibility) throw "privateDate: date could not be privated.";
+
+    return privateDateVisibility;
+};
+
+export const addComment = async (
+    userId,
+    dateId,
+    comment
+) => {
+    if (!userId || typeof userId !== "string") throw "addComment: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "addComment: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "addComment: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "addComment: dateId parameter must be a valid ObjectId.";
+
+    if (typeof comment !== "string" || !comment.trim()) throw "addComment: comment must be supplied and must not be a string of empty spaces.";
+    comment = comment.trim();
+    if (comment.length > 250) throw "addComment: comment cannot be longer than 250 characters.";
+
+    const datesCollection = await dates();
+    const userCollection = await users();
+    const currentTime = helper.getDateTime();
+
+    const userObj = await userCollection.findOne({_id: new ObjectId(userId)});
+    if (!userObj) throw "addComment: no user exists with id provided.";
+    const username = userObj.username;
+
+    const commentObj = {
+        _id: new ObjectId(),
+        userId: new ObjectId(userId),
+        username,
+        comment,
+        createdAt: currentTime,
+        editedAt: null
+    }
+    const dateWithComment = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $push: {comments: commentObj} }, { returnDocument: "after" });
+
+    if (!dateWithComment) throw "addComment: comment could not be added.";
+    commentObj._id = commentObj._id.toString();
+    commentObj.userId = commentObj.userId.toString();
+    return commentObj;
+}
+
+export const deleteComment = async (
+    userId,
+    dateId,
+    commentId
+) => {
+    if (!userId || typeof userId !== "string") throw "deleteComment: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "deleteComment: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "deleteComment: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "deleteComment: dateId parameter must be a valid ObjectId.";
+
+    if (!commentId || typeof commentId !== "string") throw "deleteComment: commentId parameter must be supplied as a string.";
+    commentId = commentId.trim();
+    if (!ObjectId.isValid(commentId)) throw "deleteComment: commentId parameter must be a valid ObjectId.";
+
+    const datesCollection = await dates();
+
+    const dateWithComment = await datesCollection.updateOne({ _id: new ObjectId(dateId) }, { $pull: {comments: {_id: new ObjectId(commentId), userId: new ObjectId(userId)}} });
+
+    if (dateWithComment.modifiedCount !== 1) throw "deleteComment: comment could not be deleted.";
+
+    return {commentDeleted: true};
+}
+
+export const editComment = async (
+    userId,
+    dateId,
+    commentId,
+    comment
+) => {
+    if (!userId || typeof userId !== "string") throw "editComment: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "editComment: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "editComment: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "editComment: dateId parameter must be a valid ObjectId.";
+
+    if (!commentId || typeof commentId !== "string") throw "editComment: commentId parameter must be supplied as a string.";
+    commentId = commentId.trim();
+    if (!ObjectId.isValid(commentId)) throw "editComment: commentId parameter must be a valid ObjectId.";
+
+    if (typeof comment !== "string" || !comment.trim()) throw "editComment: comment must be supplied and must not be a string of empty spaces.";
+    comment = comment.trim();
+    if (comment.length > 250) throw "editComment: comment cannot be longer than 250 characters.";
+
+    const datesCollection = await dates();
+    const currentTime = helper.getDateTime();
+
+    const dateWithComment = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId), comments: { $elemMatch: {_id: new ObjectId(commentId), userId: new ObjectId(userId)}}}, { $set: {"comments.$.editedAt": currentTime, "comments.$.comment": comment}}, { returnDocument: "after" });
+
+    if (!dateWithComment) throw "editComment: comment could not be edited.";
+
+    return dateWithComment.comments.find(c => c._id.equals(commentId));
+}
+export const getAllPublicDates = async () => {
+    const datesCollection = await dates();
+    const findAllPublicDates = await datesCollection.find({ visibility: "public" }).toArray();
+    if (!findAllPublicDates) throw "getAllPublicDates: no public dates to show at this time...";
+
+    return findAllPublicDates;
+}
+
+export const getDateById = async (
+    dateId
+) => {
+    if (!dateId) throw "getDateById: dateId parameter must be supplied!";
+    if (typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) throw "getDateById: dateId field must be a string that is a valid ObjectId.";
+    dateId = dateId.trim();
+
+    const datesCollection = await dates();
+    const findDate = await datesCollection.findOne({ _id: new ObjectId(dateId) });
+    
+    if (!findDate) throw "getDateById: couldn't find a date with that Id.";
+
+    return findDate;
+};
+
+export const getDatesByCreator = async (
+    userId
+) => {
+    if (!userId) throw "getDatesByCreator: userId parameter must be supplied!";
+    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getDatesByCreator: userId field must be a string that is a valid ObjectId.";
+    userId = userId.trim();
+    
+    const datesCollection = await dates();
+    const findDatesByUser = await datesCollection.find({ createdBy: new ObjectId(userId) }).toArray();
+
+    if (!findDatesByUser) throw "getDatesByCreator: no dates could be found for this userId.";
+
+    return findDatesByUser;
+};
+

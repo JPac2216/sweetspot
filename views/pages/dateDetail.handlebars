@@ -1,0 +1,63 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+        </a>
+    </div>
+</nav>
+
+<div class="page">
+    <div>
+        <h1 class="page-title">{{date.title}}</h1>
+        <div class="tags">
+            {{#each date.tags}}
+            <span class="tag">{{this}}</span>
+            {{/each}}
+        </div>
+        <div class="date-meta">{{date.borough}} / est. ${{date.estimatedCost}} / by @{{date.createdByUsername}}</div>
+        <div class="date-meta">{{date.createdAt}}</div>
+        <div class="vote-row">
+            <form action="/date/{{date._id}}/upvote" method="POST" class="form-inline">
+                <button type="submit" class="vote-btn up">&#9650; {{date.votes.upvotes}}</button>
+            </form>
+            <form action="/date/{{date._id}}/downvote" method="POST" class="form-inline">
+                <button type="submit" class="vote-btn down">&#9660; {{date.votes.downvotes}}</button>
+            </form>
+        </div>
+    </div>
+
+    <div class="event-steps">
+        {{#each date.events}}
+        <div class="event-step">
+            <div class="event-card">
+                <strong>{{this.spotName}}</strong>
+                <a href="/spots/{{this.spotId}}" class="tag">View Spot </a>
+                {{#if this.notes}}
+                <p>{{this.notes}}</p>
+                {{/if}}
+            </div>
+        </div>
+        {{#unless @last}}<span class="step-arrow">&#8594;</span>{{/unless}}
+        {{else}}
+        <p>No events added yet.</p>
+        {{/each}}
+    </div>
+
+    <div class="reviews-section">
+        <h2 class="section-title">Comments</h2>
+        {{#each date.comments}}
+        <div class="appeal-card">
+            <div>
+                <span>@{{this.username}}</span>
+                <span class="date-meta">{{this.createdAt}}</span>
+            </div>
+            <p>{{this.text}}</p>
+        </div>
+        {{else}}
+        <p>No comments yet.</p>
+        {{/each}}
+    </div>
+</div>

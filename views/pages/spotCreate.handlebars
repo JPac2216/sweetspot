@@ -1,0 +1,50 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="form-page">
+        <form class="form-box" action="/appeal" method="POST">
+            <div class="form-group">
+                <label for="spotName">Spot Name</label>
+                <input type="text" id="spotName" name="name" placeholder="e.g. Prospect Park" required>
+            </div>
+
+            <div class="form-group">
+                <label>Address</label>
+                <input type="text" name="street" placeholder="Street address">
+                <input type="text" name="borough" placeholder="Borough">
+                <input type="number" name="zip" placeholder="Zip code">
+            </div>
+
+            <div class="form-group">
+                <label>Tags</label>
+                <div class="tag-options">
+                    <div class="tag-option" title="Outdoor">Outdoor</div>
+                    <div class="tag-option" title="Food">Food</div>
+                    <div class="tag-option" title="Free">Free</div>
+                    <div class="tag-option" title="Night">Night</div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label for="notes">Special Notes</label>
+                <textarea id="notes" name="notes" placeholder="Any extra details about this spot..."></textarea>
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-blue">Done</button>
+            </div>
+
+            <p>Admins will create the spot directly. Members will submit an appeal for review.</p>
+        </form>
+    </div>
+</div>
+
+{{> spotCreate}}
