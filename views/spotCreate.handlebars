@@ -1,10 +1,10 @@
-<h1>Register</h1>
+<h1>Create a Spot</h1>
 
 {{#if error}}
     <p>{{error}}</p>
 {{/if}}
 
-<form id="appeal-form" name="appeal-form" method="POST" action="/appeal">
+<form id="appeal-form" name="appeal-form" method="POST" action="/spot/create">
     <label for="name">Name of the Spot being Appealed:</label>
     <input type="text" id="name" name="name"/>
 
