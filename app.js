@@ -40,7 +40,7 @@ app.use('/signin', async (req, res, next) => {
 
 app.use('/register', async (req, res, next) => {
     if (req.method !== "GET" || !req.session.member) return next();
-    if (req.session.member.membershipLevel === 'admin') res.redirect('/admin');
+    if (req.session.member.membershipLevel === 'admin') return res.redirect('/admin');
     return res.redirect('/home');
 });
 

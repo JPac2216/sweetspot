@@ -31,7 +31,7 @@ export const editSpot = async (
     }
     if (address) {
         const address_fields = ["street", "borough", "zip"];
-        if (address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "editSpot: address parameter must contain only the street address, borough, and zip code of the spot.";
+        if (!address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "editSpot: address parameter must contain only the street address, borough, and zip code of the spot.";
         if (!basic_regex.test(address.street.trim())) throw "editSpot: address.street must contain only letters, numbers, commas, spaces, or hashtags.";
         address.street = address.street.trim();
         if (!helper.boroughs.includes(address.borough.trim().toLowerCase())) throw "editSpot: address.borough must be a recognized borough in our system.";

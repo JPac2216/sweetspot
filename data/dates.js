@@ -29,7 +29,7 @@ export const createDate = async (
     description = description.trim();
     if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) throw "createDate: createdBy must be a valid ObjectId.";
     createdBy = createdBy.trim();
-    if (typeof visibility !== "string" || !(visibility.trim() === "public" || visibility.trim() !== "private")) throw "createDate: visibility must either be public or private.";
+    if (typeof visibility !== "string" || !(visibility.trim() === "public" || visibility.trim() === "private")) throw "createDate: visibility must either be public or private.";
     visibility = visibility.trim();
     // TODO ==> How do we check if it's the correct borough? Are we going to have a hardcoded list of them or are we going to have a collection of boroughs? I think that a list would be better for this project.
     if (typeof borough !== "string" || !borough.trim()) throw "createDate: borough parameter must be a string that is a borough registered in our system.";

@@ -1,4 +1,4 @@
-import { spots, appeals } from '../config/mongoCollections.js';
+import { users, dates, spots, appeals } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import * as helper from '../helpers.js';
 
@@ -121,7 +121,7 @@ export const getAllPendingAppeals = async () => {
     const usersCollection = await users();
     for (let appeal of pendingAppeals) {
         appeal._id = appeal._id.toString();
-        const appealUser = usersCollection.findOne( {_id: appeal.submittedBy} );
+        const appealUser = await usersCollection.findOne( {_id: appeal.submittedBy} );
         if (!appealUser) appeal.submittedByUsername = "unknown";
         else appeal.submittedByUsername = appealUser.username;
     }
