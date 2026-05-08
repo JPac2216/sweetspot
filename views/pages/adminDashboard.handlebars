@@ -1,10 +1,10 @@
 <nav class="navbar">
-    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <a href="/user/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
     <div class="nav-links">
         <a href="/explore" class="nav-btn">Explore</a>
         <a href="/admin" class="nav-btn">Manage</a>
         <a href="/dates/create" class="nav-btn nav-btn-blue">Create +</a>
-        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+        <a href="/user/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
     </div>
 </nav>
 
@@ -23,10 +23,10 @@
                     <div class="appeal-meta">Submitted by: @{{this.submittedByUsername}}</div>
                 </div>
                 <div class="appeal-actions">
-                    <form action="/admin/appeals/{{this._id}}/approve" method="POST" class="form-inline">
+                    <form id="approve-form-{{this._id}}" action="/admin/appeals/{{this._id}}/approve" method="POST" class="form-inline">
                         <button type="submit" class="btn btn-blue">Approve</button>
                     </form>
-                    <form action="/admin/appeals/{{this._id}}/reject" method="POST" class="form-inline">
+                    <form id="reject-form-{{this._id}}" action="/admin/appeals/{{this._id}}/reject" method="POST" class="form-inline">
                         <button type="submit" class="btn btn-red">Reject</button>
                     </form>
                 </div>
