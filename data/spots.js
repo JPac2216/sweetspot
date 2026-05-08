@@ -64,9 +64,70 @@ export const appealSpot = async (userId, name, description, address) => {
     if (!success) throw "appealSpot: couldn't insert the appeal into the database.";
 
     return { appealSubmitted: true };
-    return { "spotCreated": true };
 };
 
+export const approveAppeal = async (
+    appealId
+) => {
+    if (!appealId) throw "approveAppeal: appealId field must be supplied.";
+    if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "approveAppeal: appealId field must be of type string and must be a valid ObjectId.";
+    appealId = appealId.trim();
+
+    const appealsCollection = await appeals();
+    const approveAppeal = await appealsCollection.findOneAndUpdate(
+        { _id: new ObjectId(appealId)},
+        { $set: {status: "approved"} },
+        { returnDocument: "after" }
+    );
+
+    if (!approveAppeal) throw "approveAppeal: this appeal could not be approved.";
+
+    const spotData = approveAppeal.spotData;
+    const insertSpot = await createSpot(
+        spotData.name,
+        spotData.description,
+        spotData.address
+    );
+
+    if (!insertSpot) throw "approveAppeal: spot creation and insertion into the database failed.";
+
+    return { approveAppeal, spotCreated: true };
+
+};
+
+export const rejectAppeal = async (
+    appealId
+) => {
+    if (!appealId) throw "rejectAppeal: appealId field must be supplied.";
+    if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "rejectAppeal: appealId field must be of type string and must be a valid ObjectId.";
+    appealId = appealId.trim();
+
+    const appealsCollection = await appeals();
+    const rejectAppeal = await appealsCollection.findOneAndUpdate(
+        { _id: new ObjectId(appealId) },
+        { $set: { status: "rejected"} },
+        { returnDocument: "after" }
+    );
+
+    if (!rejectAppeal) throw "rejectAppeal: appeal could not be rejected.";
+
+    return { rejectAppeal, spotCreated: false };
+};
+
+export const getAllPendingAppeals = async () => {
+    const appealsCollection = await appeals();
+    const pendingAppeals = await appealsCollection.find({ status: "pending" }).toArray();
+
+    const usersCollection = await users();
+    for (let appeal of pendingAppeals) {
+        appeal._id = appeal._id.toString();
+        const appealUser = usersCollection.findOne( {_id: appeal.submittedBy} );
+        if (!appealUser) appeal.submittedByUsername = "unknown";
+        else appeal.submittedByUsername = appealUser.username;
+    }
+
+    return pendingAppeals;
+};
 
 export const addReview = async (
     spotId,

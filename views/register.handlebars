@@ -1,58 +1,73 @@
-<h1>Register</h1>
+<div class="auth-page">
+    <img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo-hero">
 
-{{#if error}}
-    <p>{{error}}</p>
-{{/if}}
+    <form id="register-form" class="auth-box" action="/register" method="POST">
+        <div class="form-group">
+            <label for="firstName">First Name</label>
+            <input type="text" id="firstName" name="firstName" class="firstName" required>
+        </div>
 
-<form id="signup-form" name="signup-form" method="POST" action="/register">
-    <label for="firstName">First Name:</label>
-    <input type="text" id="firstName" name="firstName" required />
+        <div class="form-group">
+            <label for="lastName">Last Name</label>
+            <input type="text" id="lastName" name="lastName" class="lastName" required>
+        </div>
 
-    <label for="lastName">Last Name:</label>
-    <input type="text" id="lastName" name="lastName" required />
+        <div class="form-group">
+            <label for="username">Username</label>
+            <input type="text" id="username" name="username" class="username" required>
+        </div>
 
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required />
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="email" required>
+        </div>
 
-    <label for="username">Username:</label>
-    <input type="text" id="username" name="username" required />
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="password" required>
+        </div>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required />
+        <div class="form-group">
+            <label for="confirmPassword">Confirm Password</label>
+            <input type="password" id="confirmPassword" name="confirmPassword" class="confirmPassword" required>
+        </div>
 
-    <label for="confirmPassword">Confirm Password:</label>
-    <input type="password" id="confirmPassword" name="confirmPassword" required />
+        <div class="form-group">
+            <label for="gender">Gender</label>
+            <select id="gender" name="gender" class="gender" required>
+                <option value="Female">Female</option>
+                <option value="Male">Male</option>
+                <option value="Non-binary">Non-binary</option>
+                <option value="Other">Other</option>
+            </select>
+        </div>
 
-    <label for="gender">Gender:</label>
-    <select id="gender" name="gender">
-        <option value="male">Male</option>
-        <option value="female">Female</option>
-        <option value="other">Other</option>
-    </select>
+        <div class="form-group">
+            <label for="primaryLocation">Primary Location</label>
+            <select id="primaryLocation" name="primaryLocation" class="primaryLocation" required>
+                <option value="Manhattan">Manhattan</option>
+                <option value="Brooklyn">Brooklyn</option>
+                <option value="Queens">Queens</option>
+                <option value="Bronx">Bronx</option>
+                <option value="Staten Island">Staten Island</option>
+            </select>
+        </div>
 
+        <div class="form-group">
+            <label for="secondaryLocation">Secondary Location <span>(optional)</span></label>
+            <select id="secondaryLocation" name="secondaryLocation" class="secondaryLocation">
+                <option value="Manhattan">Manhattan</option>
+                <option value="Brooklyn">Brooklyn</option>
+                <option value="Queens">Queens</option>
+                <option value="Bronx">Bronx</option>
+                <option value="Staten Island">Staten Island</option>
+            </select>
+        </div>
 
-    <label for="primaryLocation">Primary Location:</label>
-    <select id="primaryLocation" name="primaryLocation">
-        <option value="the bronx">The Bronx</option>
-        <option value="brooklyn">Brooklyn</option>
-        <option value="manhattan">Manhattan</option>
-        <option value="queens">Queens</option>
-        <option value="staten island">Staten Island</option>
-    </select>
-
-    <label for="secondaryLocation">Secondary Location:</label>
-    <select id="secondaryLocation" name="secondaryLocation">
-        <option value="">None</option>
-        <option value="the bronx">The Bronx</option>
-        <option value="brooklyn">Brooklyn</option>
-        <option value="manhattan">Manhattan</option>
-        <option value="queens">Queens</option>
-        <option value="staten island">Staten Island</option>
-    </select>
-
-    <button id="submitButton" name="submitButton">Register</button>
-</form>
-
-<div id="error" class="error" hidden> </div>
-
-<a href="/signin">Click here to sign-in</a>
+        <div class="btn-row">
+            <button type="submit" class="btn btn-filled">Create Account</button>
+            <span class="hint">Already have one?</span>
+            <a href="/signin" class="btn">Login</a>
+        </div>
+    </form>
+</div>

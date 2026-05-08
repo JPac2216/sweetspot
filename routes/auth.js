@@ -63,7 +63,7 @@ router
       email: user.email,
       username: user.username,
       membershipLevel: user.membershipLevel,
-      datePoints: user.datePoints,
+      datepoints: user.datepoints,
       primaryLocation: user.primaryLocation,
       secondaryLocation: user.secondaryLocation,
       savedSchedules: user.savedSchedules
@@ -98,7 +98,12 @@ router
     if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation || !confirmPassword){
       return res.status(400).render('register', {error: 'All fields must be supplied to create a user.', title: 'Error: Missing Fields'});
     }
-   
+
+    const username_regex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!username_regex.test(username.trim())) {
+      return res.status(400).render('register', {error: 'Username must be 3-20 characters and only contain letters, numbers, and underscores.', title: 'Error: Invalid Username'});
+    }
+
     //error checking
     let validated = null;
     try{

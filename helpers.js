@@ -82,7 +82,8 @@ export const validateUser = async (
     gender,
     primaryLocation,
     secondaryLocation,
-    isUpdating = false
+    isUpdating = false,
+    currentUserId = null
 ) => {
     // Only require all fields when creating
     if (!isUpdating) {
@@ -132,7 +133,10 @@ export const validateUser = async (
         }
         username = username.trim().toLowerCase();
         const usersCollection = await users();
-        const existingUsername = await usersCollection.findOne({ "username": username });
+        const usernameQuery = isUpdating && currentUserId
+            ? { username, _id: { $ne: new ObjectId(currentUserId) } }
+            : { username };
+        const existingUsername = await usersCollection.findOne(usernameQuery);
         if (existingUsername){
             throw "A user with that username already exists in the database!";
         }
