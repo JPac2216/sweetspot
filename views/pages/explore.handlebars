@@ -1,10 +1,10 @@
 <nav class="navbar">
-    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <a href="/user/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
     <div class="nav-links">
         <a href="/explore" class="nav-btn">Explore</a>
         <a href="/appeal" class="nav-btn">Appeal</a>
         <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
-        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+        <a href="/user/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
     </div>
 </nav>
 
@@ -14,7 +14,9 @@
         <div class="date-card">
             <div class="date-card-header">
                 <a href="/date/{{this._id}}" class="date-card-title">{{this.title}}</a>
-                    <button class="favorite-btn {{#if this.isFavorited}}active{{/if}}" title="Favorite">&#9825;</button>
+                <form id="favorite-form-{{this._id}}" action="/user/date/{{this._id}}/{{#if this.isFavorited}}unfavorite{{else}}favorite{{/if}}" method="POST" class="form-inline">
+                    <button type="submit" class="favorite-btn {{#if this.isFavorited}}active{{/if}}" title="Favorite">&#9825;</button>
+                </form>
             </div>
             <div class="date-meta">{{this.borough}}</div>
             <div class="tags">
@@ -24,10 +26,10 @@
             </div>
             <div class="date-meta">by @{{this.createdByUsername}}</div>
             <div class="vote-row">
-                <form action="/date/{{this._id}}/upvote" method="POST" class="form-inline">
+                <form id="upvote-form-{{this._id}}" action="/date/{{this._id}}/upvote" method="POST" class="form-inline">
                     <button type="submit" class="vote-btn up">&#9650; {{this.votes.upvotes}}</button>
                 </form>
-                <form action="/date/{{this._id}}/downvote" method="POST" class="form-inline">
+                <form id="downvote-form-{{this._id}}" action="/date/{{this._id}}/downvote" method="POST" class="form-inline">
                     <button type="submit" class="vote-btn down">&#9660; {{this.votes.downvotes}}</button>
                 </form>
             </div>

@@ -1,26 +1,26 @@
 <nav class="navbar">
-    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <a href="/user/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
     <div class="nav-links">
         <a href="/explore" class="nav-btn">Explore</a>
         <a href="/appeal" class="nav-btn">Appeal</a>
         <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
-        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+        <a href="/user/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
     </div>
 </nav>
 
 <div class="page">
-    <form action="/date/create" method="POST">
+    <form id="date-create-form" action="/date/create" method="POST">
         <div class="form-group">
             <label>Title</label>
-            <input type="text" name="title" value="{{date.title}}" placeholder="Date title" required>
+            <input type="text" id="title" name="title" class="title" value="{{date.title}}" placeholder="Date title" required>
         </div>
         <div class="form-group">
             <label>Tags </label>
-            <input type="text" name="tags" value="{{date.tagsRaw}}" placeholder="outdoor, free, food">
+            <input type="text" id="tags" name="tags" class="tags" value="{{date.tagsRaw}}" placeholder="outdoor, free, food">
         </div>
         <div class="form-group">
             <label>Visibility</label>
-            <select name="visibility">
+            <select id="visibility" name="visibility" class="visibility">
                 <option value="public">Public</option>
                 <option value="private">Private</option>
             </select>
@@ -63,13 +63,13 @@
 
         <div class="form-group">
             <label>Notes</label>
-            <textarea name="notes" placeholder="Special Notes...">{{date.notes}}</textarea>
+            <textarea id="notes" name="notes" class="notes" placeholder="Special Notes...">{{date.notes}}</textarea>
         </div>
 
         <div class="form-actions">
-            <button type="submit" name="action" value="publish" class="btn btn-filled">Save / Publish</button>
-            <button type="submit" name="action" value="save" class="btn">Save Draft</button>
-            <button type="button" class="btn btn-red">Delete</button>
+            <button id="publish-btn" type="submit" name="action" value="publish" class="btn btn-filled">Save / Publish</button>
+            <button id="save-draft-btn" type="submit" name="action" value="save" class="btn">Save Draft</button>
+            <button id="delete-btn" type="button" class="btn btn-red">Delete</button>
         </div>
     </form>
 </div>
