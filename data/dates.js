@@ -144,7 +144,7 @@ export const deleteFromSchedule = async (
     let changed = false;
     for (let i = 0; i < events.length; i++) {
         if (events[i]._id === new ObjectId(dateSpotId)) {
-            events.split(i, 1);
+            events.splice(i, 1);
             changed = true;
             break;
         }
@@ -351,3 +351,42 @@ export const voteOnDate = async (
     const voteCount = updateVote.voteCount;
     return {voteCount: voteCount};
 }
+
+export const getAllPublicDates = async () => {
+    const datesCollection = await dates();
+    const findAllPublicDates = await datesCollection.find({ visibility: "public" }).toArray();
+    if (!findAllPublicDates) throw "getAllPublicDates: no public dates to show at this time...";
+
+    return findAllPublicDates;
+}
+
+export const getDateById = async (
+    dateId
+) => {
+    if (!dateId) throw "getDateById: dateId parameter must be supplied!";
+    if (typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) throw "getDateById: dateId field must be a string that is a valid ObjectId.";
+    dateId = dateId.trim();
+
+    const datesCollection = await dates();
+    const findDate = await datesCollection.findOne({ _id: new ObjectId(dateId) });
+    
+    if (!findDate) throw "getDateById: couldn't find a date with that Id.";
+
+    return findDate;
+};
+
+export const getDatesByCreator = async (
+    userId
+) => {
+    if (!userId) throw "getDatesByCreator: userId parameter must be supplied!";
+    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getDatesByCreator: userId field must be a string that is a valid ObjectId.";
+    userId = userId.trim();
+    
+    const datesCollection = await dates();
+    const findDatesByUser = await datesCollection.find({ createdBy: new ObjectId(userId) }).toArray();
+
+    if (!findDatesByUser) throw "getDatesByCreator: no dates could be found for this userId.";
+
+    return findDatesByUser;
+};
+

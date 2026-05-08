@@ -1,0 +1,56 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/explore" class="nav-btn">Explore</a>
+        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+<div class="page">
+    <div class="form-page">
+        <h1 class="page-title">Edit Profile</h1>
+        <form class="form-box" action="/profile/edit" method="POST">
+            <div class="form-group">
+                <label for="firstName">First Name</label>
+                <input type="text" id="firstName" name="firstName" placeholder="Jane">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">Last Name</label>
+                <input type="text" id="lastName" name="lastName" placeholder="Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="email">Email</label>
+                <input type="email" id="email" name="email" placeholder="your@email.com">
+            </div>
+
+            <div class="form-group">
+                <label for="gender">Gender</label>
+                <input type="text" id="gender" name="gender" placeholder="e.g. Woman">
+            </div>
+
+            <div class="form-group">
+                <label for="primaryLocation">Primary Location</label>
+                <input type="text" id="primaryLocation" name="primaryLocation" placeholder="e.g. Brooklyn, NY">
+            </div>
+
+            <div class="form-group">
+                <label for="secondaryLocation">Secondary Location (optional)</label>
+                <input type="text" id="secondaryLocation" name="secondaryLocation" placeholder="e.g. Manhattan, NY">
+            </div>
+
+            <div class="form-group">
+                <label for="newPassword">New Password (leave blank to keep current)</span></label>
+                <input type="password" id="newPassword" name="newPassword" placeholder="••••••••">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn btn-filled">Save Changes</button>
+                <a href="/profile" class="btn">Cancel</a>
+            </div>
+        </form>
+    </div>
+</div>

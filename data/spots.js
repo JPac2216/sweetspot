@@ -1,6 +1,6 @@
-import { dates, spots, users } from '../config/mongoCollections.js';
+import { dates, spots, users, appeals } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
-import * as helper from 'helpers.js'
+import * as helper from 'helpers.js';
 import bcrypt from 'bcrypt';
 const saltRounds = 16;
 
@@ -122,4 +122,34 @@ export const deleteReview = async (
     if (result.modifiedCount !== 1) throw "deleteReview: could not delete review.";
 
     return {reviewDeleted: true};
+};
+
+export const getAllSpots = async (
+    filter
+) => {
+    const spotsCollection = await spots();
+    const allSpotsFiltered = await spotsCollection.find(filter).toArray();
+
+    if (!allSpotsFiltered) throw "getAllSpots: couldn't retrieve any spots that match with the filter supplied.";
+    for (let spot of allSpotsFiltered) {
+        spot._id = spot._id.toString();
+    }
+
+    return allSpotsFiltered;
+};
+
+export const getSpotById = async (
+    spotId
+) => {
+    if (!spotId) throw "getSpotById: spotId must be supplied to this function!";
+    if (typeof spotId !== "string" || !ObjectId.isValid(spotId.trim())) throw "getSpotById: spotId must be a valid string that is also a valid ObjectId.";
+    spotId = spotId.trim();
+
+    const spotsCollection = await spots();
+    const findSpotById = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
+
+    if (!findSpotById) throw "getSpotById: could not find a spot with that ID.";
+    
+    findSpotById._id = findSpotById._id.toString();
+    return findSpotById;
 };
