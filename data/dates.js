@@ -59,21 +59,19 @@ export const createDate = async (
         _id: new ObjectId(),
         title,
         description,
-        "createdBy": new ObjectId(createdBy),
+        createdBy: new ObjectId(createdBy),
         visibility,
         borough,
         estimatedCost,
         events,
         tags,
-        "votes": {
-            "upvotes": 0,
-            "downvotes": 0
-        },
-        "comments": [],
+        votes: [],
+        voteCount: 0,
+        comments: [],
         photos,
         datepointCost,
-        "createdAt": currentTime,
-        "updatedAt": currentTime
+        createdAt: currentTime,
+        updatedAt: currentTime
     };
 
     const datesCollection = await dates();
@@ -288,4 +286,68 @@ export const editComment = async (
     if (!dateWithComment) throw "editComment: comment could not be edited.";
 
     return dateWithComment.comments.find(c => c._id.equals(commentId));
+}
+
+export const voteOnDate = async (
+    userId,
+    dateId,
+    vote
+) => {
+    if (!userId || typeof userId !== "string") throw "voteOnDate: userId parameter must be supplied as a string.";
+    userId = userId.trim();
+    if (!ObjectId.isValid(userId)) throw "voteOnDate: userId parameter must be a valid ObjectId.";
+
+    if (!dateId || typeof dateId !== "string") throw "voteOnDate: dateId parameter must be supplied as a string.";
+    dateId = dateId.trim();
+    if (!ObjectId.isValid(dateId)) throw "voteOnDate: dateId parameter must be a valid ObjectId.";
+
+    if (!vote || typeof vote !== "number" || (vote !== 1 && vote !== -1)) throw "voteOnDate: vote must be an integer value of either 1 or -1.";
+
+    const datesCollection = await dates();
+
+    const date = await datesCollection.findOne({_id: new ObjectId(dateId)})
+    if (!date) throw "voteOnDate: cannot find date with id.";
+
+    const voted = date.votes.find(v => v.userId.equals(userId))
+    let updateVote = null;
+
+    if (voted){
+        if (voted.value === vote){
+            updateVote = await datesCollection.findOneAndUpdate(
+                {_id: new ObjectId(dateId)},
+                {
+                    $pull: {votes: {userId: new ObjectId(userId)}},
+                    $inc: {voteCount: -vote}
+                },
+                { returnDocument: "after" }
+            )
+        } else {
+            updateVote = await datesCollection.findOneAndUpdate(
+                {_id: new ObjectId(dateId), "votes.userId": new ObjectId(userId)},
+                {
+                    $set: {"votes.$.value": vote},
+                    $inc: {voteCount: 2 * vote}
+                },
+                { returnDocument: "after" }
+            )
+        }
+
+    } else {
+        const voteObj = {
+            userId: new ObjectId(userId),
+            value: vote
+        }
+        updateVote = await datesCollection.findOneAndUpdate(
+            {_id: new ObjectId(dateId)}, 
+            {
+                $push: {votes: voteObj},
+                $inc: {voteCount: vote}
+            },
+            { returnDocument: "after" }
+        );
+    }
+    if (!updateVote) throw "voteOnDate: vote could not be updated.";
+
+    const voteCount = updateVote.voteCount;
+    return {voteCount: voteCount};
 }
