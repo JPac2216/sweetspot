@@ -27,6 +27,13 @@
                 <button type="submit" class="vote-btn down">&#9660; {{date.votes.downvotes}}</button>
             </form>
         </div>
+        {{#if isAdmin}}
+        <div class="admin-actions">
+            <form action="/admin/dates/{{date._id}}/delete" method="POST" class="form-inline" onsubmit="return confirm('Delete this date? This cannot be undone.');">
+                <button type="submit" class="btn btn-red">Delete (Admin)</button>
+            </form>
+        </div>
+        {{/if}}
     </div>
 
     <div class="event-steps">

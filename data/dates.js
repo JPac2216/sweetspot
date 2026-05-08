@@ -1,6 +1,6 @@
 import { dates, spots, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
-import * as helper from 'helpers.js'
+import * as helper from '../helpers.js'
 import bcrypt from 'bcrypt';
 const saltRounds = 16;
 

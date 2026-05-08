@@ -32,17 +32,16 @@ app.use('/', async (req, res, next) => {
 });
 
 app.use('/signin', async (req, res, next) => {
-    if (req.method !== "GET") return next();
+    if (req.method !== "GET" || !req.session.member) return next();
     if (req.session.member.membershipLevel === "admin") return res.redirect('/admin');
     if (req.session.member) return res.redirect('/home');
     return next();
 });
 
 app.use('/register', async (req, res, next) => {
-    if (req.method !== "GET") return next();
+    if (req.method !== "GET" || !req.session.member) return next();
     if (req.session.member.membershipLevel === 'admin') res.redirect('/admin');
-    if (req.session.member) return res.redirect('/home');
-    return next();
+    return res.redirect('/home');
 });
 
 for (const page of pages) {

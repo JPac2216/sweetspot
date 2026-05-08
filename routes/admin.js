@@ -39,8 +39,8 @@ router
     .post(async (req, res) => {
         try {
             const appealId = req.params.id;
-            if (!appealId) throw "approveAppeal: appealId field must be supplied.";
-            if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "approveAppeal: appealId field must be of type string and must be a valid ObjectId.";
+            if (!appealId) throw "rejectAppeal: appealId field must be supplied.";
+            if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "rejectAppeal: appealId field must be of type string and must be a valid ObjectId.";
             
             const rejected = await spotData.rejectAppeal(appealId.trim());
             return res.redirect('/admin');

@@ -70,7 +70,7 @@ export const approveAppeal = async (
     appealId
 ) => {
     if (!appealId) throw "approveAppeal: appealId field must be supplied.";
-    if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "approveAppeal: appealId field must be of type string and mnust be a valid ObjectId.";
+    if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "approveAppeal: appealId field must be of type string and must be a valid ObjectId.";
     appealId = appealId.trim();
 
     const appealsCollection = await appeals();
