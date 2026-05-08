@@ -16,3 +16,5 @@ router
             return res.status(500).render('error', {title: 'Error', error: e});
         }
     });
+
+export default router;
