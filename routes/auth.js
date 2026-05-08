@@ -63,7 +63,7 @@ router
       email: user.email,
       username: user.username,
       membershipLevel: user.membershipLevel,
-      datePoints: user.datePoints,
+      datepoints: user.datepoints,
       primaryLocation: user.primaryLocation,
       secondaryLocation: user.secondaryLocation,
       savedSchedules: user.savedSchedules

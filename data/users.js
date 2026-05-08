@@ -2,6 +2,7 @@ import { dates, members, spots, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import bcrypt from 'bcrypt';
 import * as helpers from '../helpers.js';
+import { getDateById } from './dates.js';
 const saltRounds = 16;
 
 let exportedMethods = {

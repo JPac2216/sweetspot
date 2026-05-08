@@ -5,3 +5,4 @@ import { dates, members, spots, users } from '../config/mongoCollections.js';
 import * as helpers from '../helpers.js';
 
 
+export default router;

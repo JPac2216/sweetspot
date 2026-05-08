@@ -4,6 +4,8 @@ import session from 'express-session';
 import exphbs from 'express-handlebars';
 import configRoutes from './routes/index.js';
 
+const pages = ['/home', '/profile', '/date', '/spots', '/explore', '/appeal', '/logout'];
+
 const app = express();
 
 app.engine('handlebars', exphbs.engine({defaultLayout: 'main'}));
@@ -21,23 +23,40 @@ app.use(session({
   saveUninitialized: false
 }));
 
+// Logger for every request that the client makes to the server.
 app.use('/', async (req, res, next) => {
     const timestamp = new Date().toUTCString();
     const authState = !req.session.member ? "Non-Authenticated" : req.session.member.membershipLevel === "admin" ? "Authenticated Admin." : "Authenticated Member.";
     console.log(`[${timestamp}]: ${req.method} ${req.path} ${authState}`);
-    next();
+    return next();
 });
 
-app.use('/', async (req, res, next) => {
-    if (!req.session.member) return res.redirect('/signin');
-    next();
+app.use('/signin', async (req, res, next) => {
+    if (req.method !== "GET" || !req.session.member) return next();
+    if (req.session.member.membershipLevel === "admin") return res.redirect('/admin');
+    if (req.session.member) return res.redirect('/home');
+    return next();
 });
 
-app.use('/', async (req, res, next) => {
-    if (!req.session.member) return res.redirect('/signin');
-    if (req.session.member.membershipLevel !== 'admin') return res.status(403).render('error', { title: "Error", e: "This page is forbidden." });
-    next();
+app.use('/register', async (req, res, next) => {
+    if (req.method !== "GET" || !req.session.member) return next();
+    if (req.session.member.membershipLevel === 'admin') res.redirect('/admin');
+    return res.redirect('/home');
 });
+
+for (const page of pages) {
+    app.use(page, async (req, res, next) => {
+        if (!req.session.member) return res.redirect('/signin');
+        return next();
+    });
+}
+
+app.use('/admin', async (req, res, next) => {
+    if (!req.session.member) return res.redirect('/signin');
+    if (req.session.member.membershipLevel !== "admin") return res.status(403).render('error', {title: "Error", error: "You do not have the permissions to view this page."});
+    return next();
+});
+
 
 configRoutes(app);
 
