@@ -1,4 +1,4 @@
-import { spots, appeals } from '../config/mongoCollections.js';
+import { spots, appeals, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import * as helper from '../helpers.js';
 
@@ -34,7 +34,7 @@ export const createSpot = async (name, description, address) => {
     const success = await spotsCollection.insertOne(spotObj);
     if (!success) throw "createSpot: couldn't insert the spot into the database.";
 
-    return { spotCreated: true };
+    return { spotCreated: true, _id: spotObj._id.toString() };
 };
 
 export const appealSpot = async (userId, name, description, address) => {

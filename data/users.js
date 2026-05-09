@@ -63,26 +63,26 @@ let exportedMethods = {
             secondaryLocation = secondaryLocation.trim().toLowerCase();
         }
 
-        let userObj = {
-            _id: new ObjectId(),
-            firstName,
-            lastName,
-            email,
-            hashedPassword: await bcrypt.hash(password, saltRounds),
-            gender,
-            primaryLocation,
-            secondaryLocation,
-            datepoints: 0,
-            savedSchedules: [], 
-            favoriteDates: [], 
-            membershipLevel: "member"
-        };
+    let userObj = {
+        _id: new ObjectId(),
+        firstName,
+        lastName,
+        email,
+        username,
+        hashedPassword: await bcrypt.hash(password, saltRounds),
+        gender,
+        primaryLocation,
+        secondaryLocation,
+        datepoints: 0,
+        savedSchedules: [], 
+        favoriteDates: [], 
+        membershipLevel: "member"
+    };
 
         const success = await usersCollection.insertOne(userObj);
         if (!success) throw "createUser: couldn't register user into the database.";
         return { "memberCreated": true };
     },
-
     addFavorite = async (userId, dateId) => {
         if (!userId) throw "addFavorite: userId must be supplied.";
         if (!ObjectId.isValid(userId)) throw "addFavorite: userId is not a valid ObjectId.";

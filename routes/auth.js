@@ -70,7 +70,7 @@ router
     };
 
     if (user.membershipLevel === 'admin') {
-      return res.redirect('/admin');
+      return res.render('adminDashboard', {title: 'Admin Dashboard'});
     } else {
       return res.redirect('/home');
     }
@@ -93,7 +93,7 @@ router
     let confirmPassword = req.body.confirmPassword;
     let gender = req.body.gender;
     let primaryLocation = req.body.primaryLocation;
-    let secondaryLocation = req.body.secondaryLocation;
+    let secondaryLocation = req.body.secondaryLocation; 
 
     if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation || !confirmPassword){
       return res.status(400).render('register', {error: 'All fields must be supplied to create a user.', title: 'Error: Missing Fields'});
@@ -114,7 +114,7 @@ router
 
     try{
       let newUser = await createUser(validated.firstName, validated.lastName, validated.email, validated.username, validated.password, validated.gender, validated.primaryLocation, validated.secondaryLocation);
-      if(newUser.userCreated !== true || !newUser){
+      if(newUser.memberCreated !== true || !newUser){
         return res.status(500).render('register', {error: 'Failed to create user', title: 'Error: Internal Server Error'});
       }else{
         res.redirect('/signin');
