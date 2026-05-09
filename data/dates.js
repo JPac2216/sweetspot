@@ -13,9 +13,7 @@ export const createDate = async (
     borough,
     estimatedCost,
     events,
-    tags,
-    photos,
-    datepointCost
+    tags
 ) => {
     if (title === undefined || description === undefined || createdBy === undefined || visibility === undefined || borough === undefined || estimatedCost === undefined || events === undefined || tags === undefined || datepointCost === undefined) throw "createDate: all parameters must be supplied in order to create the date.";
     if (typeof title !== "string" || !title.trim()) throw "createDate: title must be supplied and must not be a string of empty spaces.";
@@ -38,14 +36,6 @@ export const createDate = async (
         if (typeof tag !== "string" || !tag_regex.test(tag.trim())) throw "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.";
     }
     tags = tags.map(t => t.trim());
-    if (!photos) photos = [];
-    if (!Array.isArray(photos)) throw "createDate: photos must be a list.";
-    const photo_regex = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
-    for (let photo of photos) {
-        if (typeof photo !== "string" || !photo_regex.test(photo.trim())) throw "createDate: photos list must contain photos that are valid photo links.";
-    }
-    photos = photos.map(p => p.trim());
-    if (typeof datepointCost !== "number" || Number.isNaN(datepointCost) || !Number.isFinite(datepointCost)) throw "createDate: datepointCost must be a valid number that is finite.";
 
     const currentTime = helper.getDateTime();
     const dateObj = {
@@ -61,8 +51,6 @@ export const createDate = async (
         votes: [],
         voteCount: 0,
         comments: [],
-        photos,
-        datepointCost,
         createdAt: currentTime,
         updatedAt: currentTime
     };

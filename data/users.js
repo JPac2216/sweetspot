@@ -5,7 +5,7 @@ import * as helpers from '../helpers.js';
 import { getDateById } from './dates.js';
 const saltRounds = 16;
 
-const createUser = async (
+export const createUser = async (
     firstName,
     lastName,
     email,
@@ -62,28 +62,28 @@ const createUser = async (
         secondaryLocation = secondaryLocation.trim().toLowerCase();
     }
 
-let userObj = {
-    _id: new ObjectId(),
-    firstName,
-    lastName,
-    email,
-    username,
-    hashedPassword: await bcrypt.hash(password, saltRounds),
-    gender,
-    primaryLocation,
-    secondaryLocation,
-    datepoints: 0,
-    savedSchedules: [], 
-    favoriteDates: [], 
-    membershipLevel: "member"
-};
+    let userObj = {
+        _id: new ObjectId(),
+        firstName,
+        lastName,
+        email,
+        username,
+        hashedPassword: await bcrypt.hash(password, saltRounds),
+        gender,
+        primaryLocation,
+        secondaryLocation,
+        datepoints: 0,
+        savedSchedules: [], 
+        favoriteDates: [], 
+        membershipLevel: "member"
+    };
 
     const success = await usersCollection.insertOne(userObj);
     if (!success) throw "createUser: couldn't register user into the database.";
     return { "memberCreated": true };
 };
 
-const addFavorite = async (userId, dateId) => {
+export const addFavorite = async (userId, dateId) => {
     if (!userId) throw "addFavorite: userId must be supplied.";
     if (!ObjectId.isValid(userId)) throw "addFavorite: userId is not a valid ObjectId.";
     if (!dateId) throw "addFavorite: dateId must be supplied.";
@@ -107,7 +107,7 @@ const addFavorite = async (userId, dateId) => {
     return { favoriteAdded: true };
 }; 
 
-const deleteFavorite = async (userId, dateId) => {
+export const deleteFavorite = async (userId, dateId) => {
     if (!userId) throw "deleteFavorite: userId must be supplied.";
     if (!ObjectId.isValid(userId)) throw "deleteFavorite: userId is not a valid ObjectId.";
     if (!dateId) throw "deleteFavorite: dateId must be supplied.";
@@ -129,7 +129,7 @@ const deleteFavorite = async (userId, dateId) => {
     return { favoriteDeleted: true };
 };
 
-const showAllFavorites = async (userId) => {
+export const showAllFavorites = async (userId) => {
     if (!userId) throw "showAllFavorites: userId must be supplied.";
     if (!ObjectId.isValid(userId)) throw "showAllFavorites: userId is not a valid ObjectId.";
 
@@ -149,7 +149,7 @@ const showAllFavorites = async (userId) => {
 }; 
 
 
-const authenticateUser = async (email, password) => {
+export const authenticateUser = async (email, password) => {
     if(!email || typeof email !== 'string') throw 'You must provide an email';
     email = email.trim().toLowerCase();
     if(email.length === 0) throw 'Email cannot be an empty string';
@@ -182,7 +182,7 @@ const authenticateUser = async (email, password) => {
     };
 };
 
-const deleteUser = async (email, password) => {
+export const deleteUser = async (email, password) => {
 
     //authenticate user first
     const user = await authenticateUser(email, password);
@@ -196,7 +196,7 @@ const deleteUser = async (email, password) => {
 };
 
 
-const updateUser = async (email, password, updateObj) => {
+export const updateUser = async (email, password, updateObj) => {
 
     //authenticate user first
     const user = await authenticateUser(email, password);
@@ -258,7 +258,7 @@ const updateUser = async (email, password, updateObj) => {
 
 };
 
-const getUserById = async (
+export const getUserById = async (
     userId
 ) => {
     if (!userId) throw "getUserById: userId field must be supplied!";

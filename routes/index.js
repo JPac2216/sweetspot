@@ -11,7 +11,7 @@ const constructorMethod = (app) => {
   app.use('/spots', spotRoutes);
   app.use('/admin', adminRoutes);
 
-  app.use('*', (req, res) => {
+  app.use(/(.*)/, (req, res) => {
     return res.status(404).render('error', {
       title: 'Error',
       error: 'Page not found'
