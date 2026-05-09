@@ -17,4 +17,32 @@ router
         }
     });
 
+router
+    .route('/:id/upvote')
+    .post(async (req, res) => {
+        try {
+            await dataDates.voteOnDate(req.session.member._id, req.params.id, 1);
+            const date = await dataDates.getDateById(req.params.id);
+            const upvotes = date.votes.filter(v => v.value === 1).length;
+            const downvotes = date.votes.filter(v => v.value === -1).length;
+            return res.json({ upvotes, downvotes });
+        } catch (e) {
+            return res.status(500).json({ error: String(e) });
+        }
+    });
+
+router
+    .route('/:id/downvote')
+    .post(async (req, res) => {
+        try {
+            await dataDates.voteOnDate(req.session.member._id, req.params.id, -1);
+            const date = await dataDates.getDateById(req.params.id);
+            const upvotes = date.votes.filter(v => v.value === 1).length;
+            const downvotes = date.votes.filter(v => v.value === -1).length;
+            return res.json({ upvotes, downvotes });
+        } catch (e) {
+            return res.status(500).json({ error: String(e) });
+        }
+    });
+
 export default router;

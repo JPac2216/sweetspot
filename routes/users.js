@@ -94,9 +94,9 @@ router
     .post(async (req, res) => {
         try {
             await addFavorite(req.session.member._id, req.params.id);
-            return res.redirect('back');
+            return res.json({ favorited: true });
         } catch (e) {
-            return res.status(500).render('error', { title: 'Error', error: e });
+            return res.status(500).json({ error: String(e) });
         }
     });
 
@@ -105,9 +105,9 @@ router
     .post(async (req, res) => {
         try {
             await deleteFavorite(req.session.member._id, req.params.id);
-            return res.redirect('back');
+            return res.json({ favorited: false });
         } catch (e) {
-            return res.status(500).render('error', { title: 'Error', error: e });
+            return res.status(500).json({ error: String(e) });
         }
     });
 
