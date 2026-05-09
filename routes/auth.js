@@ -57,8 +57,10 @@ router
     }
 
     req.session.member = {
+      _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
+      username: user.username,
       email: user.email,
       membershipLevel: user.membershipLevel,
       datePoints: user.datePoints,

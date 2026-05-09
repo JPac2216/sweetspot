@@ -1,18 +1,435 @@
 import {Router} from 'express';
 const router = Router();
+import { ObjectId } from 'mongodb';
 import * as dataUsers from '../data/users.js';
 import * as dataDates from '../data/dates.js';
 import * as dataSpots from '../data/spots.js';
 import { dates, members, spots, users } from '../config/mongoCollections.js';
-import * as helpers from '../helpers.js';
+import * as helper from '../helpers.js';
 
 router
     .route('/mydates')
     .get(async (req, res) => {
         try {
             const savedSchedules = req.session.member.savedSchedules;
-            return res.status(200).render('viewSavedSchedules', {title: "My Saved Schedules", userSchedules: savedschedules});
+            return res.status(200).render('viewSavedSchedules', {title: "My Saved Schedules", userSchedules: savedSchedules});
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
         }
     });
+
+router
+    .route('/create')
+    .get(async (req, res) => {
+        res.status(200).render('dateCreate', {title: 'Create a Schedule'})
+    })
+    .post(async (req, res) => {
+        let title = req.body.title;
+        let description = req.body.description;
+        let createdBy = req.session.member._id;
+        let visibility = req.body.visibility;
+        let borough = req.body.borough;
+        let estimatedCost = req.body.estimatedCost;
+        let events = req.body.events;
+        let tags = req.body.tags;
+        let photos = req.body.photos;
+        let datepointCost = req.body.datepointCost;
+
+        // Validation
+        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !events || !tags || !datepointCost) return res.status(400).render('dateCreate', {error: "createDate: all parameters must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
+
+        if (typeof title !== "string" || !title.trim()) return res.status(400).render('dateCreate', {error: "createDate: title must be supplied and must not be a string of empty spaces.", title: "Error: Invalid Title."});
+        title = title.trim();
+
+        if (typeof description !== "string" || !description.trim()) return res.status(400).render('dateCreate', {error: "createDate: description must be supplied and must not be a string of empty spaces."});
+        description = description.trim();
+
+        if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) return res.status(400).render('dateCreate', {error: "createDate: createdBy must be a valid ObjectId.", title: "Error: Invalid Creator ID."});
+        createdBy = createdBy.trim();
+
+        if (typeof visibility !== "string" || (visibility.trim() !== "public" && visibility.trim() !== "private")) return res.status(400).render('dateCreate', {error: "createDate: visibility must either be public or private.", title: "Error: Invalid Visiblity."});
+        visibility = visibility.trim();
+
+        if (typeof borough !== "string" || !helper.boroughs.includes(borough.trim().toLowerCase())) return res.status(400).render('dateCreate', {error: "createDate: borough parameter must be a string that is a borough registered in our system.", title: "Error: Invalid Borough."});
+        borough = borough.trim().toLowerCase();
+
+        estimatedCost = Number(estimatedCost);
+        if (!Number.isFinite(estimatedCost)) return res.status(400).render('dateCreate', {error: "createDate: estimatedCost parameter must be a valid, finite number.", title: "Error: Invalid Cost."});
+
+        if (typeof events === "string") {
+            try { events = JSON.parse(events); }
+            catch (e) { return res.status(400).render('dateCreate', {error: "createDate: events must be valid JSON.", title: "Error: Invalid Events."}); }
+        }
+        if (!Array.isArray(events) || events.length === 0) return res.status(400).render('dateCreate', {error: "createDate: events list must be a list that has at least one event in it.", title: "Error: Invalid Events."});
+
+        const validEvents = await helper.isValidEventList(events);
+        if (!validEvents) return res.status(400).render('dateCreate', {error: "createDate: events list must contain valid events.", title: "Error: Invalid Events."});
+
+        if (typeof tags === "string") {
+            try { tags = JSON.parse(tags); } catch (e) { tags = [tags]; }
+        }
+        if (!Array.isArray(tags) || tags.length === 0) return res.status(400).render('dateCreate', {error: "createDate: tags must be a non-empty list.", title: "Error: Invalid Tags."});
+        const tag_regex = /^[a-zA-Z]{2,20}$/;
+        for (let tag of tags) {
+            if (typeof tag !== "string" || !tag_regex.test(tag.trim())) return res.status(400).render('dateCreate', {error: "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.", title: "Error: Invalid Tags."});
+        }
+        tags = tags.map(t => t.trim());
+
+        if (typeof photos === "string") {
+            try 
+                {photos = JSON.parse(photos);
+            } 
+            catch (e) {
+                photos = [photos];
+            }
+        }
+        if (!photos) photos = [];
+        if (!Array.isArray(photos)) return res.status(400).render('dateCreate', {error: "createDate: photos must be a list.", title: "Error: Invalid Photos."});
+        const photo_regex = /^https?:\/\/.+\.(jpg|jpeg|png|gif|webp)(\?.*)?$/i;
+        for (let photo of photos) {
+            if (typeof photo !== "string" || !photo_regex.test(photo.trim())) return res.status(400).render('dateCreate', {error: "createDate: photos list must contain photos that are valid photo links.", title: "Error: Invalid Photos."});
+        }
+        photos = photos.map(p => p.trim());
+
+        datepointCost = Number(datepointCost);
+        if (!Number.isFinite(datepointCost)) return res.status(400).render('dateCreate', {error: "createDate: datepointCost must be a valid number that is finite.", title: "Error: Invalid Datepoint Cost."});
+
+        try {
+            const newDate = await dataDates.createDate(title, description, createdBy, visibility, borough, estimatedCost, events, tags, photos, datepointCost);
+            return res.redirect(`/date/${newDate._id}`);
+        } catch (e) {
+            return res.status(500).render('dateCreate', {error: e, title: "Error: Could Not Create Date."});
+        }
+    });
+
+router
+    .route('/:id/upvote')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            await dataDates.voteOnDate(userId, dateId, 1);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/downvote')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            await dataDates.voteOnDate(userId, dateId, -1);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/comment')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        let comment = req.body.comment;
+        if (!comment || typeof comment !== "string" || !comment.trim()) {
+            return res.status(400).render('error', {error: "comment must be a non-empty string.", title: 'Error: Invalid Comment'});
+        }
+        comment = comment.trim();
+        if (comment.length > 250) {
+            return res.status(400).render('error', {error: "comment cannot be longer than 250 characters.", title: 'Error: Invalid Comment'});
+        }
+
+        try {
+            await dataDates.addComment(userId, dateId, comment);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/comment/:commentId/delete')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        let commentId = req.params.commentId;
+
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!commentId || typeof commentId !== "string" || !ObjectId.isValid(commentId.trim())) {
+            return res.status(400).render('error', {error: "commentId must be a valid ObjectId.", title: 'Error: Invalid CommentId'});
+        }
+        commentId = commentId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            await dataDates.deleteComment(userId, dateId, commentId);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/addSpot')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+
+        let dateSpotId = req.body.dateSpotId;
+        let notes = req.body.notes;
+
+        if (!dateSpotId || typeof dateSpotId !== "string" || !ObjectId.isValid(dateSpotId.trim())) {
+            return res.status(400).render('error', {error: "dateSpotId must be a valid ObjectId.", title: 'Error: Invalid SpotId'});
+        }
+        dateSpotId = dateSpotId.trim();
+
+        if (notes !== undefined && typeof notes !== "string") {
+            return res.status(400).render('error', {error: "notes must be a string if provided.", title: 'Error: Invalid Notes'});
+        }
+        if (typeof notes === "string") notes = notes.trim();
+
+        try {
+            await dataDates.addToSchedule(dateId, dateSpotId, notes);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/publish')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            const date = await dataDates.getDateById(dateId);
+            if (date.createdBy.toString() !== userId) {
+                return res.status(403).render('error', {title: 'Error: Invalid Permissions', error: "Only the creator can publish this date."});
+            }
+
+            await dataDates.publishDate(dateId);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/private')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            const date = await dataDates.getDateById(dateId);
+            if (date.createdBy.toString() !== userId) {
+                return res.status(403).render('error', {title: 'Error: Invalid Permissions', error: "Only the creator can make this date private."});
+            }
+
+            await dataDates.privateDate(dateId);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/explore')
+    .get(async (req, res) => {
+        try {
+            const datesList = await dataDates.getAllPublicDates();
+            datesList.forEach(d => { d._id = d._id.toString(); });
+            return res.status(200).render('explore', {title: 'Explore', dates: datesList});
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/creator/:userId')
+    .get(async (req, res) => {
+        let userId = req.params.userId;
+        if (!userId || typeof userId !== "string" || !ObjectId.isValid(userId.trim())) {
+            return res.status(400).render('error', {error: "userId must be a valid ObjectId.", title: 'Error: Invalid UserId'});
+        }
+        userId = userId.trim();
+
+        try {
+            const datesList = await dataDates.getDatesByCreator(userId);
+            datesList.forEach(d => { d._id = d._id.toString(); });
+
+            const creator = await dataUsers.getUserById(userId);
+
+            return res.status(200).render('creatorDates', {title: `${creator.username}'s Dates`, dates: datesList, creator: {username: creator.username, _id: userId}});
+        } catch (e) {
+            return res.status(404).render('error', {title: 'Error: Creator Not Found', error: e});
+        }
+    });
+
+router
+    .route('/:id/comment/:commentId/edit')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        let commentId = req.params.commentId;
+
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!commentId || typeof commentId !== "string" || !ObjectId.isValid(commentId.trim())) {
+            return res.status(400).render('error', {error: "commentId must be a valid ObjectId.", title: 'Error: Invalid CommentId'});
+        }
+        commentId = commentId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        let comment = req.body.comment;
+        if (!comment || typeof comment !== "string" || !comment.trim()) {
+            return res.status(400).render('error', {error: "comment must be a non-empty string.", title: 'Error: Invalid Comment'});
+        }
+        comment = comment.trim();
+        if (comment.length > 250) {
+            return res.status(400).render('error', {error: "comment cannot be longer than 250 characters.", title: 'Error: Invalid Comment'});
+        }
+
+        try {
+            await dataDates.editComment(userId, dateId, commentId, comment);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id/spot/:dateSpotId/delete')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        let dateSpotId = req.params.dateSpotId;
+
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!dateSpotId || typeof dateSpotId !== "string" || !ObjectId.isValid(dateSpotId.trim())) {
+            return res.status(400).render('error', {error: "dateSpotId must be a valid ObjectId.", title: 'Error: Invalid SpotId'});
+        }
+        dateSpotId = dateSpotId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/login');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            const date = await dataDates.getDateById(dateId);
+            if (date.createdBy.toString() !== userId) {
+                return res.status(403).render('error', {title: 'Error', error: "Only the creator can remove spots from this date."});
+            }
+
+            await dataDates.deleteFromSchedule(dateId, dateSpotId);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
+    .route('/:id')
+    .get(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        try {
+            const date = await dataDates.getDateById(dateId);
+
+            const creator = await dataUsers.getUserById(date.createdBy.toString());
+            date.createdByUsername = creator.username;
+
+            const upvotes = date.votes.filter(v => v.value === 1).length;
+            const downvotes = date.votes.filter(v => v.value === -1).length;
+            date.votes = {upvotes, downvotes};
+
+            date.comments = date.comments.map(c => ({
+                _id: c._id.toString(),
+                username: c.username,
+                createdAt: c.createdAt,
+                text: c.comment
+            }));
+
+            date._id = date._id.toString();
+
+            return res.status(200).render('dateDetail', {title: date.title, date});
+        } catch (e) {
+            return res.status(404).render('error', {title: 'Error: Date Not Found', error: e});
+        }
+    });
+
