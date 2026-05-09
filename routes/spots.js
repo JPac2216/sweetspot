@@ -3,6 +3,7 @@ const router = Router();
 import { getSpotById, createSpot, deleteReview, addReview, appealSpot } from '../data/spots.js';
 import { getDatesByCreator, getAllPublicDates } from '../data/dates.js';
 import * as helpers from '../helpers.js';
+import xss from 'xss';
 import { dates } from '../config/mongoCollections.js';
 
 
@@ -27,12 +28,12 @@ router
         if (req.session.member.membershipLevel !== 'admin') {
             return res.status(403).render('pages/userHome', {title: 'User Home'}); 
         }
-        let description = req.body.description;
-        let name = req.body.name;
+        let description = xss(req.body.description);
+        let name = xss(req.body.name);
         let address = {
-            street: req.body.street,
-            borough: req.body.borough,
-            zip: parseInt(req.body.zip)
+            street: xss(req.body.street),
+            borough: xss(req.body.borough),
+            zip: parseInt(xss(req.body.zip))
         };
 
         try{
@@ -84,12 +85,12 @@ router
             return res.status(403).render('signin', {title: 'Sign In'});
         }
 
-        let description = req.body.description;
-        let name = req.body.name;
+        let description = xss(req.body.description);
+        let name = xss(req.body.name);
         let address = {
-            street: req.body.street,
-            borough: req.body.borough,
-            zip: parseInt(req.body.zip)
+            street: xss(req.body.street),
+            borough: xss(req.body.borough),
+            zip: parseInt(xss(req.body.zip))
         };
 
         try{
@@ -119,8 +120,8 @@ router
         let spotId;
         let reviewId;
         try{
-            spotId = helpers.checkObjectID(req.params.spotId);
-            reviewId = helpers.checkObjectID(req.params.reviewId);
+            spotId = helpers.checkObjectID(xss(req.params.spotId));
+            reviewId = helpers.checkObjectID(xss(req.params.reviewId));
         }catch(e){
             return res.status(400).render('error', { title: 'Error', error: 'Must give Valid ID' });
         }
@@ -137,7 +138,7 @@ router
   .get(async (req, res) => {
         //code here for GET
         try{
-            req.params.spotId = helpers.checkObjectID(req.params.spotId);
+            req.params.spotId = helpers.checkObjectID(xss(req.params.spotId));
         }catch (e){
             return res.status(400).render('error', { title: 'Error', error: 'Must give Valid ID'}); //not too sure what to render if there is an error here
         }
@@ -156,12 +157,12 @@ router
 
         let spotId;
         try {
-            spotId = helpers.checkObjectID(req.params.spotId);
+            spotId = helpers.checkObjectID(xss(req.params.spotId));
         } catch (e) {
             return res.status(400).render('error', { title: 'Error', error: 'Must give Valid ID' });
         }
-        let review = req.body.review;
-        let rating = parseInt(req.body.rating);
+        let review = xss(req.body.review);
+        let rating = parseInt(xss(req.body.rating));
         let userId = req.session.member._id.toString();
         try{
             await helpers.validateReviewFields(spotId, userId, review, rating);
@@ -191,8 +192,11 @@ router
   .route('/:spotId')
   .get(async (req, res) => {
         //code here for GET
+        if (!req.session.member) {
+            return res.status(403).render('signin', {title: 'Sign In'});
+        }
         try {
-            req.params.spotId = helpers.checkObjectID(req.params.spotId);
+            req.params.spotId = helpers.checkObjectID(xss(req.params.spotId));
         } catch (e) {
             return res.status(404).render('error', { title: 'Error', error: 'Must give Valid ID'}); //not too sure what to render if there is an error here
         }
@@ -212,8 +216,6 @@ router
         }
         return res.status(200).render('pages/locationDesc', {title: 'Location Description', spot: spot, userDates: userDates});
     });
-
-
 
 
 export default router;
