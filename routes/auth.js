@@ -3,6 +3,7 @@ const router = Router();
 import { createUser ,authenticateUser } from '../data/users.js';
 import { dates, members, spots, users } from '../config/mongoCollections.js';
 import * as helpers from '../helpers.js';
+import xss from 'xss';
 
 router
   .route('/')
@@ -20,8 +21,8 @@ router
   })
   .post(async (req, res) => {
     //code here for POST
-    let email = req.body.email;
-    let password = req.body.password;
+    let email = xss(req.body.email);
+    let password = xss(req.body.password);
 
     //error checking
     if(!email || email.trim().length === 0){
@@ -85,15 +86,15 @@ router
   })
   .post(async (req, res) => {
     //code here for POST
-    let firstName = req.body.firstName;
-    let lastName = req.body.lastName;
-    let email = req.body.email;
-    let username = req.body.username;
-    let password = req.body.password;
-    let confirmPassword = req.body.confirmPassword;
-    let gender = req.body.gender;
-    let primaryLocation = req.body.primaryLocation;
-    let secondaryLocation = req.body.secondaryLocation; 
+    let firstName = xss(req.body.firstName);
+    let lastName = xss(req.body.lastName);
+    let email = xss(req.body.email);
+    let username = xss(req.body.username);
+    let password = xss(req.body.password);
+    let confirmPassword = xss(req.body.confirmPassword);
+    let gender = xss(req.body.gender);
+    let primaryLocation = xss(req.body.primaryLocation);
+    let secondaryLocation = xss(req.body.secondaryLocation); 
 
     if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation || !confirmPassword){
       return res.status(400).render('register', {error: 'All fields must be supplied to create a user.', title: 'Error: Missing Fields'});
