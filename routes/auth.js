@@ -61,6 +61,7 @@ router
       _id: user._id,
       firstName: user.firstName,
       lastName: user.lastName,
+      username: user.username,
       email: user.email,
       username: user.username,
       membershipLevel: user.membershipLevel,
