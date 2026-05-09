@@ -1,0 +1,24 @@
+<h1>Add a Review</h1>
+
+{{#if error}}
+    <p>{{error}}</p>
+{{/if}}
+
+<form id="review-form" name="review-form" method="POST" action="/spot/{{spot._id}}/review">
+    <label for="review">Write your review:</label>
+    <input type="text" id="review" name="review"/>
+
+    <label for="rating">Rating (1-5):</label>
+    <select id="rating" name="rating">
+        <option value="1">1</option>
+        <option value="2">2</option>
+        <option value="3">3</option>
+        <option value="4">4</option>
+        <option value="5">5</option>
+    </select>
+
+    <button id="submitButton" name="submitButton">Submit Review</button>
+</form>
+
+<div id="error" class="error" hidden></div>
+<script src="/js/addReview.js"></script>

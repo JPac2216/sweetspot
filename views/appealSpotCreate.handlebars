@@ -4,7 +4,7 @@
     <p>{{error}}</p>
 {{/if}}
 
-<form id="admin-form" name="admin-form" method="POST" action="/spot/create">
+<form id="appeal-form" name="appeal-form" method="POST" action="/spot/appeal">
     <label for="name">Name of the Spot being Created:</label>
     <input type="text" id="name" name="name"/>
 
@@ -26,8 +26,8 @@
     <label for="zip">Enter the zip-code of the Spot:</label>
     <input type="text" id="zip" name="zip"/>
 
-    <button id="submitButton" name="submitButton">Submit</button>
+    <button id="submitButton" name="submitButton">Submit for Appeal</button>
 </form>
 
 <div id="error" class="error" hidden> </div>
-<script src="/js/spotCreate.js"></script>
+<script src="/js/appealSpotCreate.js"></script>

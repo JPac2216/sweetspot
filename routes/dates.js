@@ -433,3 +433,4 @@ router
         }
     });
 
+export default router;

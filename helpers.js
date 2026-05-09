@@ -82,7 +82,8 @@ export const validateUser = async (
     gender,
     primaryLocation,
     secondaryLocation,
-    isUpdating = false
+    isUpdating = false,
+    currentUserId = null
 ) => {
     // Only require all fields when creating
     if (!isUpdating) {
@@ -132,7 +133,10 @@ export const validateUser = async (
         }
         username = username.trim().toLowerCase();
         const usersCollection = await users();
-        const existingUsername = await usersCollection.findOne({ "username": username });
+        const usernameQuery = isUpdating && currentUserId
+            ? { username, _id: { $ne: new ObjectId(currentUserId) } }
+            : { username };
+        const existingUsername = await usersCollection.findOne(usernameQuery);
         if (existingUsername){
             throw "A user with that username already exists in the database!";
         }
@@ -174,4 +178,48 @@ export const validateUser = async (
     }
 
     return { firstName, lastName, email, username, password, gender, primaryLocation, secondaryLocation };
+};
+
+export const checkObjectID = (id) => {
+    if (!id) throw 'You must provide an id to search for';
+    if (typeof id !== 'string') throw 'Id must be a string';
+    if (id.trim().length === 0)
+        throw 'Id cannot be an empty string or just spaces';
+    id = id.trim();
+    if (!ObjectId.isValid(id)) throw 'invalid object ID';
+
+    return id;
+};
+
+
+export const validateSpotFields = (name, description, address) => {
+    if (!name || !description || !address) throw "all parameters must be supplied.";
+    const basic_regex = /^[a-zA-Z0-9 ,#]{2,25}$/;
+    if (typeof name !== "string" || !basic_regex.test(name.trim())) throw "name must be a valid name consisting of letters, numbers, or spaces.";
+    if (typeof description !== "string" || !description.trim()) throw "description must be a non-empty string.";
+    const address_fields = ["street", "borough", "zip"];
+    if (!address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "address must contain only street, borough, and zip.";
+    if (!basic_regex.test(address.street)) throw "address.street must contain only letters, numbers, commas, spaces, or hashtags.";
+    if (!boroughs.includes(address.borough.toLowerCase())) throw "address.borough must be a recognized borough in our system.";
+    if (typeof address.zip !== "number" || Number.isNaN(address.zip) || !Number.isFinite(address.zip)) throw "address.zip must be a valid zip code.";
+};
+
+
+export const validateReviewFields = async (spotId,userId, review, rating) => {
+
+    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || !rating || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
+    spotId = spotId.trim();
+    userId = userId.trim();
+    review = review.trim();
+    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
+
+    const usersCollection = await users();
+    const findUser = await usersCollection.findOne({ _id: new ObjectId(userId)});
+    if (!findUser) throw "addReview: user with that userId is not stored within usersCollection.";
+    const username = findUser.username;
+
+    const spotsCollection = await spots();
+    
+    const findSpot = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
+    if (!findSpot) throw "addReview: spot with that spotId is not stored within spotsCollection.";
 };

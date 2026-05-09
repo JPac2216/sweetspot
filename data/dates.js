@@ -385,3 +385,18 @@ export const getDatesByCreator = async (
     return findDatesByUser;
 };
 
+export const deleteDateById = async (
+    dateId
+) => {
+    if (!dateId) throw "deleteDateById: dateId field must be supplied.";
+    if (typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) throw "deleteDateById: dateId field must be of type string and must be a valid ObjectId.";
+    dateId = dateId.trim();
+
+    const datesCollection = await dates();
+    const deletedDate = await datesCollection.findOneAndDelete( { _id: new ObjectId(dateId) } );
+
+    if (!deletedDate) throw "deleteDateById: this date could not be deleted from the database.";
+
+    return deletedDate;
+};
+

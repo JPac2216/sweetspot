@@ -3,6 +3,7 @@ const router = Router();
 import { createUser ,authenticateUser } from '../data/users.js';
 import { dates, members, spots, users } from '../config/mongoCollections.js';
 import * as helpers from '../helpers.js';
+import xss from 'xss';
 
 router
   .route('/')
@@ -20,8 +21,8 @@ router
   })
   .post(async (req, res) => {
     //code here for POST
-    let email = req.body.email;
-    let password = req.body.password;
+    let email = xss(req.body.email);
+    let password = xss(req.body.password);
 
     //error checking
     if(!email || email.trim().length === 0){
@@ -62,15 +63,16 @@ router
       lastName: user.lastName,
       username: user.username,
       email: user.email,
+      username: user.username,
       membershipLevel: user.membershipLevel,
-      datePoints: user.datePoints,
+      datepoints: user.datepoints,
       primaryLocation: user.primaryLocation,
       secondaryLocation: user.secondaryLocation,
       savedSchedules: user.savedSchedules
     };
 
     if (user.membershipLevel === 'admin') {
-      return res.redirect('/admin');
+      return res.render('adminDashboard', {title: 'Admin Dashboard'});
     } else {
       return res.redirect('/home');
     }
@@ -85,30 +87,36 @@ router
   })
   .post(async (req, res) => {
     //code here for POST
-    let firstName = req.body.firstName;
-    let lastName = req.body.lastName;
-    let email = req.body.email;
-    let password = req.body.password;
-    let confirmPassword = req.body.confirmPassword;
-    let gender = req.body.gender;
-    let primaryLocation = req.body.primaryLocation;
-    let secondaryLocation = req.body.secondaryLocation;
+    let firstName = xss(req.body.firstName);
+    let lastName = xss(req.body.lastName);
+    let email = xss(req.body.email);
+    let username = xss(req.body.username);
+    let password = xss(req.body.password);
+    let confirmPassword = xss(req.body.confirmPassword);
+    let gender = xss(req.body.gender);
+    let primaryLocation = xss(req.body.primaryLocation);
+    let secondaryLocation = xss(req.body.secondaryLocation); 
 
-    if (!firstName || !lastName || !email || !password || !gender || !primaryLocation || !confirmPassword){
+    if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation || !confirmPassword){
       return res.status(400).render('register', {error: 'All fields must be supplied to create a user.', title: 'Error: Missing Fields'});
     }
-   
+
+    const username_regex = /^[a-zA-Z0-9_]{3,20}$/;
+    if (!username_regex.test(username.trim())) {
+      return res.status(400).render('register', {error: 'Username must be 3-20 characters and only contain letters, numbers, and underscores.', title: 'Error: Invalid Username'});
+    }
+
     //error checking
     let validated = null;
     try{
-      validated = await helpers.validateUser(firstName, lastName, email, password, confirmPassword, gender, primaryLocation, secondaryLocation);
+      validated = await helpers.validateUser(firstName, lastName, email, username, password, confirmPassword, gender, primaryLocation, secondaryLocation);
     } catch(e){
       return res.status(400).render('register', {error: e, title: 'Error: Invalid Input'});
     }
 
     try{
-      let newUser = await createUser(validated.firstName, validated.lastName, validated.email, validated.password, validated.gender, validated.primaryLocation, validated.secondaryLocation);
-      if(newUser.userCreated !== true || !newUser){
+      let newUser = await createUser(validated.firstName, validated.lastName, validated.email, validated.username, validated.password, validated.gender, validated.primaryLocation, validated.secondaryLocation);
+      if(newUser.memberCreated !== true || !newUser){
         return res.status(500).render('register', {error: 'Failed to create user', title: 'Error: Internal Server Error'});
       }else{
         res.redirect('/signin');

@@ -1,10 +1,10 @@
 <nav class="navbar">
-    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <a href="/user/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
     <div class="nav-links">
         <a href="/explore" class="nav-btn">Explore</a>
         <a href="/appeal" class="nav-btn">Appeal</a>
         <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
-        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+        <a href="/user/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
     </div>
 </nav>
 
@@ -21,7 +21,7 @@
             <button type="button" class="btn btn-blue filter-toggle" onclick="toggleFilter(this)">Add to Date</button>
             <div class="filter-dropdown">
                 {{#each userDates}}
-                <form action="/date/{{this._id}}/addSpot" method="POST">
+                <form id="add-spot-form-{{this._id}}" action="/date/{{this._id}}/addSpot" method="POST">
                     <input type="hidden" name="spotId" value="{{../spot._id}}">
                     <button type="submit" class="btn">{{this.title}}</button>
                 </form>
