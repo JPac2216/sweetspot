@@ -1,4 +1,4 @@
-const adminForm = document.getElementById('admin-form');
+const appealForm = document.getElementById('appeal-form');
 const errorDiv = document.getElementById('error');
 
 const NAME_REGEX = /^[a-zA-Z0-9 ,#]{2,25}$/;
@@ -15,8 +15,8 @@ function clearError(){
   errorDiv.textContent = '';
 }
 
-if(adminForm){
-  adminForm.addEventListener('submit', (event) => {
+if(appealForm){
+  appealForm.addEventListener('submit', (event) => {
     event.preventDefault();
     clearError();
 
@@ -42,6 +42,6 @@ if(adminForm){
       return showError('Zip code must be a valid number.');
     }
 
-    adminForm.submit();
+    appealForm.submit();
   });
 }
