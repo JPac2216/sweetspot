@@ -146,7 +146,6 @@ const showAllFavorites = async (userId) => {
     favoriteDates.forEach(date => { date._id = date._id.toString(); });
 
     return favoriteDates;
-    return { "userCreated": true };
 }; 
 
 
