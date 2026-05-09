@@ -25,7 +25,7 @@ router
             return res.status(403).render('signin', {title: 'Sign In'});
         }
         if (req.session.member.membershipLevel !== 'admin') {
-            return res.status(403).render('userHome', {title: 'User Home'}); 
+            return res.status(403).render('pages/userHome', {title: 'User Home'}); 
         }
         let description = req.body.description;
         let name = req.body.name;
@@ -145,7 +145,7 @@ router
             let spot = await getSpotById(req.params.spotId);
             return res.status(200).render('addReview', {title: 'Add Review', spot: spot}); 
         }catch(e){
-            return res.status(404).render('userHome', { title: 'Error', error: 'Spot not found.'}); //again what should we render here?
+            return res.status(404).render('pages/userHome', { title: 'Error', error: 'Spot not found.'}); //again what should we render here?
         }
   })
   .post(async (req, res) => {
