@@ -1,19 +1,21 @@
-<h1>Sign In</h1>
+<div class="auth-page">
+    <img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo-hero">
 
-{{#if error}}
-    <p>{{error}}</p>
-{{/if}}
+    <form id="signin-form" class="auth-box" action="/signin" method="POST">
+        <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" class="email" placeholder="your@email.com" required>
+        </div>
 
-<form id="signin-form" method="POST" action="/signin">
-    <label for="email">Email:</label>
-    <input type="email" id="email" name="email" required />
+        <div class="form-group">
+            <label for="password">Password</label>
+            <input type="password" id="password" name="password" class="password" placeholder="••••••••" required>
+        </div>
 
-    <label for="password">Password:</label>
-    <input type="password" id="password" name="password" required />
-
-    <button id="submit_button" name="submit_button">Sign In</button>
-</form>
-
-<div id="error" class="error" hidden> </div>
-
-<a href="/register">Click here to signup!</a>
+        <div class="btn-row">
+            <button type="submit" class="btn btn-filled">Login</button>
+            <span class="hint">New user?</span>
+            <a href="/register" class="btn">Create Account</a>
+        </div>
+    </form>
+</div>
