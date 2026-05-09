@@ -1,6 +1,6 @@
 import {Router} from 'express';
 const router = Router();
-import {getUserById, getDatesByCreator, showAllFavorites, updateUser, addFavorite, deleteFavorite} from '../data/users.js';
+import {getUserById, showAllFavorites, updateUser, addFavorite, deleteFavorite} from '../data/users.js';
 import * as spot from '../data/spots.js';
 import * as dateData from '../data/dates.js';
 
@@ -117,3 +117,6 @@ router
         req.session.destroy();
         return res.redirect('/signin');
     });
+
+
+export default router;
