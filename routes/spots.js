@@ -1,8 +1,9 @@
 import {Router} from 'express';
 const router = Router();
-import { getSpotById, createSpot, deleteReview, addReview } from '../data/spots.js';
-import { getDatesByCreator } from '../data/dates.js';
+import { getSpotById, createSpot, deleteReview, addReview, appealSpot } from '../data/spots.js';
+import { getDatesByCreator, getAllPublicDates } from '../data/dates.js';
 import * as helpers from '../helpers.js';
+import { dates } from '../config/mongoCollections.js';
 
 
 router
@@ -48,6 +49,64 @@ router
         }
 
     });
+
+
+router
+  .route('/explore')
+  .get(async (req, res) => {
+        //code here for GET
+        //check if the user is logged in
+        if (!req.session.member) {
+            return res.status(403).render('signin', {title: 'Sign In'});
+        }
+
+        try{
+            let allDates = await getAllPublicDates();
+            return res.status(200).render('pages/explore', {title: 'Explore', dates: allDates});
+        }catch(e){
+            return res.status(400).render('error', { title: 'Error', error: e });
+        }
+    });
+
+router
+  .route('/appeal')
+  .get(async (req, res) => {
+        //code here for GET
+        //check if the user is logged in
+        if (!req.session.member) {
+            return res.status(403).render('signin', {title: 'Sign In'});
+        }
+        return res.status(200).render('appealSpotCreate', {title: 'Create Spot'});
+    })
+    .post(async (req, res) => {
+        //code here for POST
+        if (!req.session.member) {
+            return res.status(403).render('signin', {title: 'Sign In'});
+        }
+
+        let description = req.body.description;
+        let name = req.body.name;
+        let address = {
+            street: req.body.street,
+            borough: req.body.borough,
+            zip: parseInt(req.body.zip)
+        };
+
+        try{
+            helpers.validateSpotFields(name, description, address);
+        }catch(e){
+            return res.status(400).render('appealSpotCreate', {title: 'Create Spot', error: e});
+        }
+        
+        try{
+            await appealSpot(req.session.member._id.toString(), name.trim(), description.trim(), address); 
+            return res.redirect('/spots');
+        }catch(e){
+            return res.status(400).render('appealSpotCreate', {title: 'Create Spot', error: e});
+        }
+
+    });
+
 
 
 router
