@@ -263,7 +263,7 @@ const getUserById = async (
     userId
 ) => {
     if (!userId) throw "getUserById: userId field must be supplied!";
-    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getUserById: userId field must be a string that is a valid ObjectId.";4
+    if (typeof userId !== "string" || !ObjectId.isValid(userId.trim())) throw "getUserById: userId field must be a string that is a valid ObjectId.";
     userId = userId.trim();
 
     const usersCollection = await users();
