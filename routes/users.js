@@ -1,6 +1,6 @@
 import {Router} from 'express';
 const router = Router();
-import userData from '../data/users.js';
+import {getUserById, getDatesByCreator, showAllFavorites, updateUser, addFavorite, deleteFavorite} from '../data/users.js';
 import * as spot from '../data/spots.js';
 import * as dateData from '../data/dates.js';
 
@@ -20,9 +20,9 @@ router
     .route('/profile')
     .get(async (req, res) => {
         try {
-            const user = await userData.getUserById(req.session.member._id);
+            const user = await getUserById(req.session.member._id);
             const createdDates = await dateData.getDatesByCreator(req.session.member._id);
-            const favoriteDates = await userData.showAllFavorites(req.session.member._id);
+            const favoriteDates = await showAllFavorites(req.session.member._id);
             const publicDates = createdDates.filter(d => d.isPublic);
             const privateDates = createdDates.filter(d => !d.isPublic);
             return res.status(200).render('pages/userProfile', {
@@ -76,7 +76,7 @@ router
         }
 
         try {
-            await userData.updateUser(req.session.member.email, currentPassword.trim(), updateObj);
+            await updateUser(req.session.member.email, currentPassword.trim(), updateObj);
             if (updateObj.email) req.session.member.email = updateObj.email.trim().toLowerCase();
             if (updateObj.username) req.session.member.username = updateObj.username.trim().toLowerCase();
             return res.redirect('/profile');
@@ -93,7 +93,7 @@ router
     .route('/date/:id/favorite')
     .post(async (req, res) => {
         try {
-            await userData.addFavorite(req.session.member._id, req.params.id);
+            await addFavorite(req.session.member._id, req.params.id);
             return res.redirect('back');
         } catch (e) {
             return res.status(500).render('error', { title: 'Error', error: e });
@@ -104,7 +104,7 @@ router
     .route('/date/:id/unfavorite')
     .post(async (req, res) => {
         try {
-            await userData.deleteFavorite(req.session.member._id, req.params.id);
+            await deleteFavorite(req.session.member._id, req.params.id);
             return res.redirect('back');
         } catch (e) {
             return res.status(500).render('error', { title: 'Error', error: e });
