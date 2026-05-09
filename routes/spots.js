@@ -66,7 +66,7 @@ router
             return res.status(400).render('error', { title: 'Error', error: 'Must give Valid ID' });
         }
         try{
-            await deleteReview(spotId, reviewId);
+            await deleteReview(req.session.member._id.toString(), spotId, reviewId);
             return res.redirect(`/spot/${spotId}`);
         }catch(e){
             return res.status(400).render('error', { title: 'Error', error: e });
@@ -107,16 +107,24 @@ router
         try{
             await helpers.validateReviewFields(spotId, userId, review, rating);
         }catch(e){
-            let spot = await getSpotById(spotId);
-            return res.status(400).render('addReview', {title: 'Add Review', spot: spot, error: e});
+            try{
+                let spot = await getSpotById(spotId);
+                return res.status(400).render('addReview', {title: 'Add Review', spot: spot, error: e});
+            }catch(e){
+                return res.status(404).render('error', {title: 'Error', error: e});
+            }
         }
 
         try{
             await addReview(spotId, userId, review.trim(), rating);
             return res.redirect(`/spot/${spotId}`);
         }catch(e){
-            let spot = await getSpotById(spotId);
-            return res.status(400).render('addReview', {title: 'Add Review', spot: spot, error: e});
+            try{
+                let spot = await getSpotById(spotId);
+                return res.status(400).render('addReview', {title: 'Add Review', spot: spot, error: e});
+            }catch(e){
+                return res.status(404).render('error', {title: 'Error', error: e});
+            }
         }
   });
 

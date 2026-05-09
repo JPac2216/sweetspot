@@ -211,15 +211,15 @@ export const validateReviewFields = async (spotId,userId, review, rating) => {
     spotId = spotId.trim();
     userId = userId.trim();
     review = review.trim();
-    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, username and review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
+    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
 
     const usersCollection = await users();
     const findUser = await usersCollection.findOne({ _id: new ObjectId(userId)});
-    if (!findUser) throw "addReview: user with that userId and username combination is not stored within usersCollection.";
+    if (!findUser) throw "addReview: user with that userId is not stored within usersCollection.";
     const username = findUser.username;
 
     const spotsCollection = await spots();
     
     const findSpot = await spotsCollection.findOne({ _id: new ObjectId(spotId) });
     if (!findSpot) throw "addReview: spot with that spotId is not stored within spotsCollection.";
-}
+};
