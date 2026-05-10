@@ -3,6 +3,7 @@ const router = Router();
 import {getUserById, showAllFavorites, updateUser, addFavorite, deleteFavorite} from '../data/users.js';
 import * as spot from '../data/spots.js';
 import * as dateData from '../data/dates.js';
+import xss from 'xss';
 
 
 router
@@ -48,7 +49,14 @@ router
         }
     })
     .post(async (req, res) => {
-        const { firstName, lastName, email, username, gender, primaryLocation, secondaryLocation, currentPassword } = req.body;
+        const firstName = req.body.firstName ? xss(req.body.firstName): undefined;
+        const lastName = req.body.lastName ? xss(req.body.lastName) : undefined;
+        const email = req.body.email ? xss(req.body.email) : undefined;
+        const username = req.body.username ? xss(req.body.username) : undefined;
+        const gender = req.body.gender ? xss(req.body.gender) : undefined;
+        const primaryLocation  = req.body.primaryLocation  ? xss(req.body.primaryLocation)  : undefined;
+        const secondaryLocation= req.body.secondaryLocation ? xss(req.body.secondaryLocation) : undefined;
+        const currentPassword  = req.body.currentPassword  ? xss(req.body.currentPassword)  : undefined;
 
         if (!currentPassword || currentPassword.trim().length === 0) {
             return res.status(400).render('pages/userEdit', {
@@ -92,22 +100,24 @@ router
 router
     .route('/date/:id/favorite')
     .post(async (req, res) => {
+        const dateId = xss(req.params.id);
         try {
-            await addFavorite(req.session.member._id, req.params.id);
-            return res.redirect('back');
+            await addFavorite(req.session.member._id, dateId);
+            return res.json({ favorited: true });
         } catch (e) {
-            return res.status(500).render('error', { title: 'Error', error: e });
+            return res.status(500).json({ error: String(e) });
         }
     });
 
 router
     .route('/date/:id/unfavorite')
     .post(async (req, res) => {
+        const dateId = xss(req.params.id);
         try {
-            await deleteFavorite(req.session.member._id, req.params.id);
-            return res.redirect('back');
+            await deleteFavorite(req.session.member._id, dateId);
+            return res.json({ favorited: false });
         } catch (e) {
-            return res.status(500).render('error', { title: 'Error', error: e });
+            return res.status(500).json({ error: String(e) });
         }
     });
 
