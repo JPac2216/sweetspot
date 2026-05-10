@@ -13,7 +13,8 @@
             method: 'POST',
             url: isFavorited
                 ? '/date/' + dateId + '/unfavorite'
-                : '/date/' + dateId + '/favorite'
+                : '/date/' + dateId + '/favorite',
+            dataType: 'json'
         };
 
         $.ajax(requestConfig).then(function (responseMessage) {

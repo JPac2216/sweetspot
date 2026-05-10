@@ -35,34 +35,9 @@ router
         let events = req.body.events;
         let tags = req.body.tags;
 
-        if (req.body.action === "save") {
-            if (typeof events === "string") {
-                try { 
-                    events = JSON.parse(events); 
-                } catch (e) { 
-                    events = []; 
-                }
-            }
-            if (!Array.isArray(events)) events = [];
+        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !tags) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: all required fields must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
 
-            if (typeof tags === "string") {
-                try { 
-                    tags = JSON.parse(tags); 
-                } catch (e) { 
-                    tags = [tags]; 
-                }
-            }
-            if (!Array.isArray(tags)) tags = [];
-
-            try {
-                const draft = await dataDates.saveDraft(createdBy, title, description, borough, estimatedCost, events, tags);
-                return res.redirect(`/date/${draft._id}`);
-            } catch (e) {
-                return res.status(500).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin", error: e, title: "Error: Could Not Save Draft."});
-            }
-        }
-
-        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !tags) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: all parameters must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
+        if (events === undefined) events = [];
 
         if (typeof title !== "string" || !title.trim()) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: title must be supplied and must not be a string of empty spaces.", title: "Error: Invalid Title."});
         title = xss(title.trim());
@@ -86,15 +61,17 @@ router
             try { events = JSON.parse(events); }
             catch (e) { return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events must be valid JSON.", title: "Error: Invalid Events."}); }
         }
-        if (!Array.isArray(events) || events.length === 0) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "You need at least one spot. Save a draft first, then visit a spot page and use 'Add to Date' to add spots before publishing.", title: "Error: No Spots Added."});
+        if (!Array.isArray(events)) events = [];
 
-        const validEvents = await helper.isValidEventList(events);
-        if (!validEvents) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events list must contain valid events.", title: "Error: Invalid Events."});
+        if (events.length > 0) {
+            const validEvents = await helper.isValidEventList(events);
+            if (!validEvents) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events list must contain valid events.", title: "Error: Invalid Events."});
 
-        events = events.map(ev => ({
-            ...ev,
-            notes: typeof ev.notes === "string" ? xss(ev.notes.trim()) : ev.notes
-        }));
+            events = events.map(ev => ({
+                ...ev,
+                notes: typeof ev.notes === "string" ? xss(ev.notes.trim()) : ev.notes
+            }));
+        }
 
         if (typeof tags === "string") {
             tags = tags.split(',').map(t => t.trim()).filter(Boolean);
@@ -134,7 +111,7 @@ router
             const upvotes = date.votes.filter(v => v.value === 1).length;
             const downvotes = date.votes.filter(v => v.value === -1).length;
 
-            if (req.accepts('json') && !req.accepts('html')) {
+            if (req.xhr) {
                 return res.json({ upvotes, downvotes });
             }
             return res.redirect(`/date/${dateId}`);
@@ -162,7 +139,7 @@ router
             const date = await dataDates.getDateById(dateId);
             const upvotes = date.votes.filter(v => v.value === 1).length;
             const downvotes = date.votes.filter(v => v.value === -1).length;
-            if (req.accepts('json') && !req.accepts('html')) {
+            if (req.xhr) {
                 return res.json({ upvotes, downvotes });
             }
             return res.redirect(`/date/${dateId}`);
@@ -321,10 +298,39 @@ router
     });
 
 router
+    .route('/:id/delete')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/signin');
+        }
+        const userId = req.session.member._id;
+        const isAdmin = !req.session.member ? false : req.session.member.membershipLevel === "admin";
+
+        try {
+            const date = await dataDates.getDateById(dateId);
+            if (date.createdBy.toString() !== userId && !isAdmin) {
+                return res.status(403).render('error', {title: 'Error: Invalid Permissions', error: "Only the creator or an admin can delete this date."});
+            }
+
+            await dataDates.deleteDateById(dateId);
+            return res.redirect('/profile');
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
     .route('/explore')
     .get(async (req, res) => {
         try {
-            const datesList = await dataDates.getAllPublicDates();
+            const viewerId = !req.session.member ? null : req.session.member._id;
+            const datesList = await dataDates.getAllPublicDates([], '', viewerId);
             datesList.forEach(d => { d._id = d._id.toString(); });
             return res.status(200).render('pages/explore', {title: 'Explore', dates: datesList, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         } catch (e) {

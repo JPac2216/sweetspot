@@ -28,9 +28,11 @@ export const createDate = async (
     if (typeof borough !== "string" || !helper.boroughs.includes(borough.trim().toLowerCase())) throw "createDate: borough parameter must be a string that is a borough registered in our system.";
     borough = xss(borough.trim().toLowerCase());
     if (typeof estimatedCost !== "number" || Number.isNaN(estimatedCost) || !Number.isFinite(estimatedCost)) throw "createDate: estimatedCost parameter must be a valid, finite number.";
-    if (!Array.isArray(events) || events.length === 0) throw "createDate: events list must be a list that has at least one event in it.";
-    const validEvents = await helper.isValidEventList(events);
-    if (!validEvents) throw "createDate: events list must contain valid events.";
+    if (!Array.isArray(events)) throw "createDate: events list must be an array.";
+    if (events.length > 0) {
+        const validEvents = await helper.isValidEventList(events);
+        if (!validEvents) throw "createDate: events list must contain valid events.";
+    }
     if (!Array.isArray(tags) || tags.length === 0) throw "createDate: tags must be a non-empty list.";
     const tag_regex = /^[a-zA-Z]{2,20}$/;
     for (let tag of tags) {
@@ -59,92 +61,6 @@ export const createDate = async (
     const datesCollection = await dates();
     const success = await datesCollection.insertOne(dateObj);
     if (!success.acknowledged || !success.insertedId) throw "createDate: couldn't insert the date into the database.";
-
-    dateObj._id = dateObj._id.toString();
-    dateObj.createdBy = dateObj.createdBy.toString();
-    return dateObj;
-};
-
-
-export const saveDraft = async (
-    createdBy,
-    title,
-    description,
-    borough,
-    estimatedCost,
-    events,
-    tags
-) => {
-    if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) throw "saveDraft: createdBy must be a valid ObjectId.";
-    createdBy = createdBy.trim();
-
-    if (typeof title === "string" && title.trim()) {
-        title = xss(title.trim());
-    } else {
-        title = "Untitled Draft";
-    }
-    if (typeof description === "string" && description.trim()) {
-        description = xss(description.trim());
-    } else {
-        description = "(draft - no description yet)";
-    }
-
-    if (typeof borough === "string" && helper.boroughs.includes(borough.trim().toLowerCase())) {
-        borough = xss(borough.trim().toLowerCase());
-    } else {
-        borough = "manhattan";
-    }
-
-    estimatedCost = Number(estimatedCost);
-    if (!Number.isFinite(estimatedCost)) estimatedCost = 0;
-
-    if (!Array.isArray(events)) events = [];
-    let cleanedEvents = [];
-    for (let i = 0; i < events.length; i++) {
-        let ev = events[i];
-        let notes = "";
-        if (typeof ev.notes === "string") notes = xss(ev.notes.trim());
-        cleanedEvents.push({
-            order: ev.order,
-            spotId: ev.spotId,
-            spotName: ev.spotName,
-            notes: notes
-        });
-    }
-    events = cleanedEvents;
-
-    if (!Array.isArray(tags)) tags = [];
-    const tag_regex = /^[a-zA-Z]{2,20}$/;
-    let cleanedTags = [];
-    for (let i = 0; i < tags.length; i++) {
-        if (typeof tags[i] === "string" && tag_regex.test(tags[i].trim())) {
-            cleanedTags.push(xss(tags[i].trim()));
-        }
-    }
-    if (!cleanedTags.includes("Draft")) cleanedTags.push("Draft");
-    tags = cleanedTags;
-
-    const currentTime = helper.getDateTime();
-    const dateObj = {
-        _id: new ObjectId(),
-        title,
-        description,
-        createdBy: new ObjectId(createdBy),
-        visibility: "private",
-        borough,
-        estimatedCost,
-        events,
-        tags,
-        votes: [],
-        voteCount: 0,
-        comments: [],
-        createdAt: currentTime,
-        updatedAt: currentTime
-    };
-
-    const datesCollection = await dates();
-    const success = await datesCollection.insertOne(dateObj);
-    if (!success.acknowledged || !success.insertedId) throw "saveDraft: couldn't insert the draft into the database.";
 
     dateObj._id = dateObj._id.toString();
     dateObj.createdBy = dateObj.createdBy.toString();
@@ -422,7 +338,7 @@ export const voteOnDate = async (
     return {voteCount: voteCount};
 }
 
-export const getAllPublicDates = async (tags = [], cost = '') => {
+export const getAllPublicDates = async (tags = [], cost = '', viewerId = null) => {
     const datesCollection = await dates();
     let allDates = await datesCollection.find({ visibility: "public" }).toArray();
     if(!allDates) throw "getAllPublicDates: no public dates to show at this time";
@@ -437,6 +353,44 @@ export const getAllPublicDates = async (tags = [], cost = '') => {
     if (costNum === 1) allDates = allDates.filter(d => d.estimatedCost <= 30);
     else if (costNum === 2) allDates = allDates.filter(d => d.estimatedCost > 30 && d.estimatedCost <= 75);
     else if (costNum === 3) allDates = allDates.filter(d => d.estimatedCost > 75);
+
+    const usersCollection = await users();
+
+    let viewer = null;
+    if (typeof viewerId === "string" && ObjectId.isValid(viewerId.trim())) {
+        viewer = await usersCollection.findOne({ _id: new ObjectId(viewerId.trim()) });
+    }
+
+    for (let i = 0; i < allDates.length; i++) {
+        const creator = await usersCollection.findOne({ _id: allDates[i].createdBy });
+        if (creator) {
+            allDates[i].createdByUsername = creator.username;
+        } else {
+            allDates[i].createdByUsername = "unknown";
+        }
+        allDates[i].createdById = allDates[i].createdBy.toString();
+
+        let upvotes = 0;
+        let downvotes = 0;
+        if (Array.isArray(allDates[i].votes)) {
+            for (let j = 0; j < allDates[i].votes.length; j++) {
+                if (allDates[i].votes[j].value === 1) upvotes++;
+                else if (allDates[i].votes[j].value === -1) downvotes++;
+            }
+        }
+        allDates[i].votes = { upvotes: upvotes, downvotes: downvotes };
+
+        let isFavorited = false;
+        if (viewer && Array.isArray(viewer.favoriteDates)) {
+            for (let k = 0; k < viewer.favoriteDates.length; k++) {
+                if (viewer.favoriteDates[k].toString() === allDates[i]._id.toString()) {
+                    isFavorited = true;
+                    break;
+                }
+            }
+        }
+        allDates[i].isFavorited = isFavorited;
+    }
 
     return allDates;
 }
