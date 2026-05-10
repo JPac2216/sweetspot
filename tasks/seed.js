@@ -1,3 +1,9 @@
+// Seeds the SweetSpot database with sample users, real NYC restaurants, dates, and appeals.
+// Run with: npm run seed
+//
+// Spots come from the NYC DOHMH Restaurant Inspection Results dataset:
+//   https://data.cityofnewyork.us/Health/DOHMH-New-York-City-Restaurant-Inspection-Results/43nn-pn8j
+
 import { dbConnection, closeConnection } from '../config/mongoConnection.js';
 import { users, spots, dates, appeals } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
@@ -5,6 +11,99 @@ import bcrypt from 'bcrypt';
 import * as helpers from '../helpers.js';
 
 const SALT_ROUNDS = 16;
+const NYC_API_URL = 'https://data.cityofnewyork.us/resource/43nn-pn8j.json';
+const RAW_FETCH_LIMIT = 5000;
+const TARGET_SPOT_COUNT = 50;
+const MIN_SPOT_COUNT = 10;
+
+const BOROUGH_MAP = {
+    'manhattan': 'manhattan',
+    'brooklyn': 'brooklyn',
+    'queens': 'queens',
+    'bronx': 'the bronx',
+    'staten island': 'staten island'
+};
+
+const NAME_REGEX = /^[a-zA-Z0-9 ,#]{2,25}$/;
+const STREET_REGEX = /^[a-zA-Z0-9 ,#]{2,25}$/;
+const ZIP_REGEX = /^\d{5}(-\d{4})?$/;
+
+const cleanForRegex = (raw, maxLen = 25) => {
+    if (!raw || typeof raw !== 'string') return null;
+    // Strip everything except letters, digits, spaces, commas, hashtags
+    let cleaned = raw.replace(/[^a-zA-Z0-9 ,#]/g, '').trim();
+    // Collapse multiple whitespace runs into single spaces
+    cleaned = cleaned.replace(/\s+/g, ' ');
+    if (cleaned.length === 0) return null;
+    // Truncate (don't pad)
+    if (cleaned.length > maxLen) cleaned = cleaned.slice(0, maxLen).trim();
+    if (cleaned.length < 2) return null;
+    return cleaned;
+};
+
+// Map a raw inspection record into a SweetSpot-shaped spot doc, or null if it can't be cleaned
+const transformRecord = (raw) => {
+    const name = cleanForRegex(raw.dba, 25);
+    if (!name || !NAME_REGEX.test(name)) return null;
+
+    const borough = BOROUGH_MAP[(raw.boro || '').toLowerCase()];
+    if (!borough) return null;
+
+    const zip = (raw.zipcode || '').trim();
+    if (!ZIP_REGEX.test(zip)) return null;
+
+    const rawStreet = `${raw.building || ''} ${raw.street || ''}`.trim();
+    const street = cleanForRegex(rawStreet, 25);
+    if (!street || !STREET_REGEX.test(street)) return null;
+
+    const cuisine = (raw.cuisine_description || 'Restaurant').trim();
+    const grade = raw.grade ? `Grade ${raw.grade}.` : '';
+    const score = (raw.score && !isNaN(Number(raw.score))) ? `Inspection score: ${raw.score}.` : '';
+    const description =
+        `${cuisine} restaurant in ${borough}. ${grade} ${score} Sourced from NYC DOHMH Restaurant Inspection Results.`
+            .replace(/\s+/g, ' ')
+            .trim();
+
+    return {
+        _id: new ObjectId(),
+        name,
+        description,
+        address: { street, borough, zip },
+        sweetspotRating: { average: null, count: 0 },
+        reviews: []
+    };
+};
+
+const fetchNYCRestaurants = async () => {
+    console.log(`  Fetching up to ${RAW_FETCH_LIMIT} inspection records from NYC Open Data...`);
+    const url = `${NYC_API_URL}?$limit=${RAW_FETCH_LIMIT}`;
+    const res = await fetch(url);
+    if (!res.ok) {
+        throw new Error(`NYC API returned ${res.status} ${res.statusText}`);
+    }
+    const data = await res.json();
+    console.log(`  Received ${data.length} raw rows`);
+    return data;
+};
+
+const buildSpotDocs = (rawRows) => {
+    const seenCamis = new Set();
+    const out = [];
+    for (const row of rawRows) {
+        if (out.length >= TARGET_SPOT_COUNT) break;
+        if (!row.camis || seenCamis.has(row.camis)) continue;
+
+        const doc = transformRecord(row);
+        if (!doc) {
+            seenCamis.add(row.camis); // memoize the bad rows so that we don't have to encounter them again
+            continue;
+        }
+
+        seenCamis.add(row.camis);
+        out.push(doc);
+    }
+    return out;
+};
 
 const main = async () => {
     console.log('SweetSpot seed starting...');
@@ -16,8 +115,8 @@ const main = async () => {
     const now = helpers.getDateTime();
     const today = helpers.getCurrentDate();
 
+    // Seeding the users collection using some fabricated user data.
     const usersCollection = await users();
-
     const adminId = new ObjectId();
     const aliceId = new ObjectId();
     const bobId = new ObjectId();
@@ -26,325 +125,246 @@ const main = async () => {
     const userDocs = [
         {
             _id: adminId,
-            firstName: 'Admin',
-            lastName: 'User',
-            email: 'admin@sweetspot.com',
-            username: 'admin',
+            firstName: 'Admin', lastName: 'User',
+            email: 'admin@sweetspot.com', username: 'admin',
             hashedPassword: await bcrypt.hash('Admin123!', SALT_ROUNDS),
-            gender: 'other',
-            primaryLocation: 'manhattan',
-            secondaryLocation: '',
-            datepoints: 1000,
-            savedSchedules: [],
-            favoriteDates: [],
+            gender: 'other', primaryLocation: 'manhattan', secondaryLocation: '',
+            datepoints: 1000, savedSchedules: [], favoriteDates: [],
             membershipLevel: 'admin'
         },
         {
             _id: aliceId,
-            firstName: 'Alice',
-            lastName: 'Anderson',
-            email: 'alice@example.com',
-            username: 'alice',
+            firstName: 'Alice', lastName: 'Anderson',
+            email: 'alice@example.com', username: 'alice',
             hashedPassword: await bcrypt.hash('Password1!', SALT_ROUNDS),
-            gender: 'female',
-            primaryLocation: 'brooklyn',
-            secondaryLocation: 'manhattan',
-            datepoints: 50,
-            savedSchedules: [],
-            favoriteDates: [],
+            gender: 'female', primaryLocation: 'brooklyn', secondaryLocation: 'manhattan',
+            datepoints: 50, savedSchedules: [], favoriteDates: [],
             membershipLevel: 'member'
         },
         {
             _id: bobId,
-            firstName: 'Bob',
-            lastName: 'Brown',
-            email: 'bob@example.com',
-            username: 'bob',
+            firstName: 'Bob', lastName: 'Brown',
+            email: 'bob@example.com', username: 'bob',
             hashedPassword: await bcrypt.hash('Password1!', SALT_ROUNDS),
-            gender: 'male',
-            primaryLocation: 'queens',
-            secondaryLocation: '',
-            datepoints: 25,
-            savedSchedules: [],
-            favoriteDates: [],
+            gender: 'male', primaryLocation: 'queens', secondaryLocation: '',
+            datepoints: 25, savedSchedules: [], favoriteDates: [],
             membershipLevel: 'member'
         },
         {
             _id: carlosId,
-            firstName: 'Carlos',
-            lastName: 'Cruz',
-            email: 'carlos@example.com',
-            username: 'carlos',
+            firstName: 'Carlos', lastName: 'Cruz',
+            email: 'carlos@example.com', username: 'carlos',
             hashedPassword: await bcrypt.hash('Password1!', SALT_ROUNDS),
-            gender: 'non-binary',
-            primaryLocation: 'the bronx',
-            secondaryLocation: 'manhattan',
-            datepoints: 75,
-            savedSchedules: [],
-            favoriteDates: [],
+            gender: 'non-binary', primaryLocation: 'the bronx', secondaryLocation: 'manhattan',
+            datepoints: 75, savedSchedules: [], favoriteDates: [],
             membershipLevel: 'member'
         }
     ];
     await usersCollection.insertMany(userDocs);
     console.log(`  Inserted ${userDocs.length} users (1 admin, 3 members)`);
 
+    // Seeding the spots collection using the data from the NYC Restaurant Inspection Dataset.
     const spotsCollection = await spots();
+    let spotDocs;
+    try {
+        const rawRows = await fetchNYCRestaurants();
+        spotDocs = buildSpotDocs(rawRows);
+    } catch (e) {
+        console.error('  ERROR: failed to fetch from NYC API:', e.message);
+        console.error('  Aborting seed — check internet connection and try again.');
+        await closeConnection();
+        process.exit(1);
+    }
 
-    const prospectId = new ObjectId();
-    const metId = new ObjectId();
-    const smorgId = new ObjectId();
-    const astoriaId = new ObjectId();
-    const zooId = new ObjectId();
-    const ferryId = new ObjectId();
+    if (spotDocs.length < MIN_SPOT_COUNT) {
+        console.error(`  ERROR: only ${spotDocs.length} valid spots survived filtering (minimum ${MIN_SPOT_COUNT}).`);
+        console.error('  The regex constraints in validateSpotFields are very strict — most real restaurant names get filtered.');
+        console.error('  Consider relaxing the name/street regex in data/spots.js to allow more characters (apostrophes, periods, etc.) and longer lengths.');
+        await closeConnection();
+        process.exit(1);
+    }
 
-    const spotDocs = [
-        {
-            _id: prospectId,
-            name: 'Prospect Park',
-            description: 'A massive park in Brooklyn with rolling hills, a lake, and quiet picnic spots. Easy for low-key afternoon dates.',
-            address: { street: '95 Prospect Park West', borough: 'brooklyn', zip: 11215 },
-            sweetspotRating: { average: 5, count: 1, sum: 5 },
-            reviews: [
-                {
-                    _id: new ObjectId(),
-                    userId: aliceId,
-                    username: 'alice',
-                    rating: 5,
-                    comment: 'Loved the picnic spot near the boathouse. Great for a casual first date.',
-                    createdAt: today
-                }
-            ]
-        },
-        {
-            _id: metId,
-            name: 'The Met',
-            description: 'World-class art museum on the Upper East Side. Wander together for hours; suggested donation makes it accessible.',
-            address: { street: '1000 5th Ave', borough: 'manhattan', zip: 10028 },
-            sweetspotRating: { average: 4.5, count: 2, sum: 9 },
-            reviews: [
-                {
-                    _id: new ObjectId(),
-                    userId: bobId,
-                    username: 'bob',
-                    rating: 4,
-                    comment: 'The Egyptian wing always delivers. Pay-what-you-want for NY residents.',
-                    createdAt: today
-                },
-                {
-                    _id: new ObjectId(),
-                    userId: carlosId,
-                    username: 'carlos',
-                    rating: 5,
-                    comment: 'Endless rooms, perfect for a rainy day.',
-                    createdAt: today
-                }
-            ]
-        },
-        {
-            _id: smorgId,
-            name: 'Smorgasburg',
-            description: 'Outdoor food market with dozens of vendors. Brooklyn on Saturdays, Manhattan on Sundays.',
-            address: { street: '90 Kent Ave', borough: 'brooklyn', zip: 11211 },
-            sweetspotRating: { average: null, count: 0 },
-            reviews: []
-        },
-        {
-            _id: astoriaId,
-            name: 'Astoria Park',
-            description: 'Riverside park in Queens with skyline views and the public Astoria Pool.',
-            address: { street: '19 19th St', borough: 'queens', zip: 11105 },
-            sweetspotRating: { average: null, count: 0 },
-            reviews: []
-        },
-        {
-            _id: zooId,
-            name: 'Bronx Zoo',
-            description: 'Largest metropolitan zoo in the country. A full-day adventure if the weather holds.',
-            address: { street: '2300 Southern Blvd', borough: 'the bronx', zip: 10460 },
-            sweetspotRating: { average: null, count: 0 },
-            reviews: []
-        },
-        {
-            _id: ferryId,
-            name: 'Staten Island Ferry',
-            description: 'Free 25-minute ride past the Statue of Liberty. Sunset trip is the move.',
-            address: { street: '4 Whitehall St', borough: 'manhattan', zip: 10004 },
-            sweetspotRating: { average: null, count: 0 },
-            reviews: []
-        }
-    ];
     await spotsCollection.insertMany(spotDocs);
-    console.log(`  Inserted ${spotDocs.length} spots across boroughs`);
+    console.log(`  Inserted ${spotDocs.length} spots from NYC restaurant inspection data`);
 
+    // Fabricate some reviews so that we have that in the seeded collections.
+    const reviewsByUser = [
+        { user: aliceId, username: 'alice', rating: 5, comment: 'Great spot for a casual date' },
+        { user: bobId, username: 'bob', rating: 4, comment: 'Solid food, decent atmosphere' },
+        { user: carlosId, username: 'carlos', rating: 5, comment: 'Loved it, will be back' }
+    ];
+
+    if (spotDocs.length >= 1) {
+        const r = reviewsByUser[0];
+        await spotsCollection.updateOne(
+            { _id: spotDocs[0]._id },
+            {
+                $push: {
+                    reviews: {
+                        _id: new ObjectId(),
+                        userId: r.user, username: r.username, rating: r.rating,
+                        comment: r.comment, createdAt: today
+                    }
+                },
+                $set: {
+                    'sweetspotRating.count': 1,
+                    'sweetspotRating.sum': r.rating,
+                    'sweetspotRating.average': r.rating
+                }
+            }
+        );
+    }
+    if (spotDocs.length >= 2) {
+        const reviewsToPush = reviewsByUser.slice(1).map(r => ({
+            _id: new ObjectId(),
+            userId: r.user, username: r.username, rating: r.rating,
+            comment: r.comment, createdAt: today
+        }));
+        const sum = reviewsToPush.reduce((a, r) => a + r.rating, 0);
+        await spotsCollection.updateOne(
+            { _id: spotDocs[1]._id },
+            {
+                $push: { reviews: { $each: reviewsToPush } },
+                $set: {
+                    'sweetspotRating.count': reviewsToPush.length,
+                    'sweetspotRating.sum': sum,
+                    'sweetspotRating.average': sum / reviewsToPush.length
+                }
+            }
+        );
+    }
+    console.log('  Added sample reviews on the first two spots');
+
+
+    // Seeding the dates collection
     const datesCollection = await dates();
 
-    const date1Id = new ObjectId();
-    const date2Id = new ObjectId();
+    const spotsByBorough = {};
+    for (const s of spotDocs) {
+        if (!spotsByBorough[s.address.borough]) spotsByBorough[s.address.borough] = [];
+        spotsByBorough[s.address.borough].push(s);
+    }
+
+    const buildDate = ({ title, description, createdBy, borough, estimatedCost, tags, datepointCost, visibility = 'public', votes = [], comments = [] }) => {
+        const candidateSpots = spotsByBorough[borough] || [];
+        if (candidateSpots.length === 0) return null;
+        const eventCount = Math.min(2, candidateSpots.length);
+        const events = candidateSpots.slice(0, eventCount).map((s, i) => ({
+            order: i + 1,
+            spotId: s._id,
+            spotName: s.name,
+            notes: `Stop ${i + 1} on this date.`
+        }));
+
+        const voteCount = votes.reduce((sum, v) => sum + v.value, 0);
+
+        return {
+            _id: new ObjectId(),
+            title, description, createdBy,
+            visibility, borough, estimatedCost,
+            events, tags, votes, voteCount, comments,
+            photos: [], datepointCost,
+            createdAt: now, updatedAt: now
+        };
+    };
 
     const dateDocs = [
-        {
-            _id: date1Id,
-            title: 'Brooklyn Brunch and Stroll',
-            description: 'Smorgasburg for late breakfast, then a slow walk through Prospect Park. Easy first date energy.',
+        buildDate({
+            title: 'Brooklyn Food Crawl',
+            description: 'A casual food-hopping date across two great Brooklyn restaurants.',
             createdBy: aliceId,
-            visibility: 'public',
             borough: 'brooklyn',
-            estimatedCost: 30,
-            events: [
-                { order: 1, spotId: smorgId, spotName: 'Smorgasburg', notes: 'Try the ramen burger if it is still around.' },
-                { order: 2, spotId: prospectId, spotName: 'Prospect Park', notes: 'Loop the lake counter clockwise.' }
-            ],
-            tags: ['Outdoor', 'Food', 'Casual'],
-            votes: [
-                { userId: bobId, value: 1 },
-                { userId: carlosId, value: 1 }
-            ],
-            voteCount: 2,
-            comments: [
-                {
-                    _id: new ObjectId(),
-                    userId: bobId,
-                    username: 'bob',
-                    comment: 'Did this last weekend, ten out of ten.',
-                    createdAt: now,
-                    editedAt: null
-                }
-            ],
-            photos: [],
-            datepointCost: 10,
-            createdAt: now,
-            updatedAt: now
-        },
-        {
-            _id: date2Id,
-            title: 'Museum Mile Afternoon',
-            description: 'Slow afternoon at the Met followed by the ferry at sunset. Indoors then out.',
-            createdBy: bobId,
-            visibility: 'public',
-            borough: 'manhattan',
-            estimatedCost: 15,
-            events: [
-                { order: 1, spotId: metId, spotName: 'The Met', notes: 'Pay-what-you-want; bring an ID with NY address.' },
-                { order: 2, spotId: ferryId, spotName: 'Staten Island Ferry', notes: 'Catch the 6:30 boat for the best light.' }
-            ],
-            tags: ['Indoor', 'Romantic', 'Free'],
-            votes: [
-                { userId: aliceId, value: 1 }
-            ],
-            voteCount: 1,
-            comments: [],
-            photos: [],
-            datepointCost: 15,
-            createdAt: now,
-            updatedAt: now
-        },
-        {
-            _id: new ObjectId(),
-            title: 'Queens Day Out',
-            description: 'Astoria Park then a slow dinner walk through Astoria. Quiet and uncrowded.',
-            createdBy: carlosId,
-            visibility: 'public',
-            borough: 'queens',
-            estimatedCost: 25,
-            events: [
-                { order: 1, spotId: astoriaId, spotName: 'Astoria Park', notes: 'Walk along the river edge.' }
-            ],
-            tags: ['Outdoor', 'Quiet'],
-            votes: [],
-            voteCount: 0,
-            comments: [],
-            photos: [],
-            datepointCost: 5,
-            createdAt: now,
-            updatedAt: now
-        },
-        {
-            _id: new ObjectId(),
-            title: 'Bronx Zoo Adventure',
-            description: 'Full day at the Bronx Zoo. Pack water and comfortable shoes.',
-            createdBy: aliceId,
-            visibility: 'public',
-            borough: 'the bronx',
             estimatedCost: 50,
-            events: [
-                { order: 1, spotId: zooId, spotName: 'Bronx Zoo', notes: 'Enter at the Asia gate to skip the main crowd.' }
-            ],
-            tags: ['Outdoor', 'Adventure'],
-            votes: [
-                { userId: bobId, value: -1 }
-            ],
-            voteCount: -1,
-            comments: [
-                {
-                    _id: new ObjectId(),
-                    userId: carlosId,
-                    username: 'carlos',
-                    comment: 'Spent six hours and still did not see everything.',
-                    createdAt: now,
-                    editedAt: null
-                }
-            ],
-            photos: [],
-            datepointCost: 25,
-            createdAt: now,
-            updatedAt: now
-        },
-        {
-            _id: new ObjectId(),
-            title: 'Private Idea Im Cooking Up',
-            description: 'Working draft. Not ready to share yet.',
+            tags: ['Food', 'Casual'],
+            datepointCost: 10,
+            votes: [{ userId: bobId, value: 1 }, { userId: carlosId, value: 1 }],
+            comments: [{
+                _id: new ObjectId(),
+                userId: bobId, username: 'bob',
+                comment: 'Did this last weekend, solid time.',
+                createdAt: now, editedAt: null
+            }]
+        }),
+        buildDate({
+            title: 'Manhattan Lunch Date',
+            description: 'Quick midtown spots for an easy weekday lunch.',
+            createdBy: bobId,
+            borough: 'manhattan',
+            estimatedCost: 40,
+            tags: ['Food', 'Quick'],
+            datepointCost: 5,
+            votes: [{ userId: aliceId, value: 1 }]
+        }),
+        buildDate({
+            title: 'Queens Tasting Tour',
+            description: 'Explore two underrated Queens spots back-to-back.',
+            createdBy: carlosId,
+            borough: 'queens',
+            estimatedCost: 35,
+            tags: ['Food', 'Adventure'],
+            datepointCost: 8
+        }),
+        buildDate({
+            title: 'Bronx Hidden Gems',
+            description: 'Two stops in the Bronx, off the tourist track.',
             createdBy: aliceId,
-            visibility: 'private',
+            borough: 'the bronx',
+            estimatedCost: 30,
+            tags: ['Food', 'Local'],
+            datepointCost: 7,
+            votes: [{ userId: bobId, value: -1 }]
+        }),
+        buildDate({
+            title: 'Private Idea',
+            description: 'Working on this one, not ready to share.',
+            createdBy: aliceId,
             borough: 'manhattan',
             estimatedCost: 0,
-            events: [
-                { order: 1, spotId: ferryId, spotName: 'Staten Island Ferry', notes: '' }
-            ],
             tags: ['Draft'],
-            votes: [],
-            voteCount: 0,
-            comments: [],
-            photos: [],
             datepointCost: 0,
-            createdAt: now,
-            updatedAt: now
-        }
-    ];
-    await datesCollection.insertMany(dateDocs);
-    console.log(`  Inserted ${dateDocs.length} dates (4 public, 1 private) with comments and votes`);
+            visibility: 'private'
+        })
+    ].filter(Boolean);
 
-    await usersCollection.updateOne(
-        { _id: bobId },
-        { $push: { favoriteDates: date1Id } }
-    );
-    await usersCollection.updateOne(
-        { _id: carlosId },
-        { $push: { favoriteDates: { $each: [date1Id, date2Id] } } }
-    );
+    if (dateDocs.length > 0) {
+        await datesCollection.insertMany(dateDocs);
+    }
+    console.log(`  Inserted ${dateDocs.length} sample dates referencing seeded NYC spots`);
+
+    if (dateDocs.length >= 1) {
+        await usersCollection.updateOne(
+            { _id: bobId },
+            { $push: { favoriteDates: dateDocs[0]._id } }
+        );
+    }
+    if (dateDocs.length >= 2) {
+        await usersCollection.updateOne(
+            { _id: carlosId },
+            { $push: { favoriteDates: { $each: [dateDocs[0]._id, dateDocs[1]._id] } } }
+        );
+    }
     console.log('  Seeded favoriteDates on two members');
 
+
+    // Seeding the appeals collection
     const appealsCollection = await appeals();
     const appealDocs = [
         {
             _id: new ObjectId(),
-            submittedBy: bobId,
-            status: 'pending',
-            submittedAt: now,
+            submittedBy: bobId, status: 'pending', submittedAt: now,
             spotData: {
                 name: 'Domino Park',
-                description: 'New waterfront park in Williamsburg with skyline views and food kiosks.',
-                address: { street: '15 River St', borough: 'brooklyn', zip: 11249 }
+                description: 'New waterfront park in Williamsburg with skyline views.',
+                address: { street: '15 River St', borough: 'brooklyn', zip: '11249' }
             }
         },
         {
             _id: new ObjectId(),
-            submittedBy: carlosId,
-            status: 'pending',
-            submittedAt: now,
+            submittedBy: carlosId, status: 'pending', submittedAt: now,
             spotData: {
                 name: 'Pelham Bay Park',
-                description: 'The largest park in NYC. Trails, beach, and a golf course. Good for a long walk and pretending you are not in the city.',
-                address: { street: 'Bruckner Blvd', borough: 'the bronx', zip: 10464 }
+                description: 'The largest park in NYC. Trails, beach, golf course.',
+                address: { street: 'Bruckner Blvd', borough: 'the bronx', zip: '10464' }
             }
         }
     ];
@@ -357,6 +377,7 @@ const main = async () => {
     console.log('  Member:  alice@example.com   / Password1!');
     console.log('  Member:  bob@example.com     / Password1!');
     console.log('  Member:  carlos@example.com  / Password1!');
+    console.log(`\nSpots data sourced from NYC DOHMH Restaurant Inspection Results (43nn-pn8j).`);
 
     await closeConnection();
 };
