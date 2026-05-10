@@ -8,11 +8,19 @@
     </div>
 </nav>
 
+{{#if error}}
+<div class="error-banner">{{error}}</div>
+{{/if}}
+
 <div class="page">
     <form id="date-create-form" action="/date/create" method="POST">
         <div class="form-group">
             <label>Title</label>
             <input type="text" id="title" name="title" class="title" value="{{date.title}}" placeholder="Date title" required>
+        </div>
+        <div class="form-group">
+            <label>Description</label>
+            <textarea id="description" name="description" class="description" placeholder="Describe your date..." required>{{date.description}}</textarea>
         </div>
         <div class="form-group">
             <label>Tags </label>
@@ -24,6 +32,20 @@
                 <option value="public">Public</option>
                 <option value="private">Private</option>
             </select>
+        </div>
+        <div class="form-group">
+            <label>Borough</label>
+            <select id="borough" name="borough" class="borough" required>
+                <option value="manhattan">Manhattan</option>
+                <option value="brooklyn">Brooklyn</option>
+                <option value="queens">Queens</option>
+                <option value="the bronx">The Bronx</option>
+                <option value="staten island">Staten Island</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Estimated Cost ($)</label>
+            <input type="number" id="estimatedCost" name="estimatedCost" class="estimatedCost" min="0" step="0.01" value="{{date.estimatedCost}}" required>
         </div>
 
         <h2 class="section-title">Spots</h2>

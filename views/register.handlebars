@@ -1,6 +1,10 @@
 <div class="auth-page">
     <img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo-hero">
 
+    {{#if error}}
+    <div class="error-banner">{{error}}</div>
+    {{/if}}
+
     <form id="register-form" class="auth-box" action="/register" method="POST">
         <div class="form-group">
             <label for="firstName">First Name</label>

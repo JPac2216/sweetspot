@@ -508,3 +508,15 @@ textarea { resize: vertical; min-height: 80px; }
 .flagged-card:hover { border-color: #ff6666; }
 
 .form-inline { display: inline; }
+
+
+/* ── Error ──────────────────────────── */
+
+.error-banner {
+    background: #fdd;
+    border: 1px solid #c00;
+    color: #800;
+    padding: 0.75rem 1rem;
+    border-radius: 4px;
+    margin-bottom: 1rem;
+}

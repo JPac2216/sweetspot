@@ -17,8 +17,26 @@
             <span class="tag">{{this}}</span>
             {{/each}}
         </div>
-        <div class="date-meta">{{date.borough}} / est. ${{date.estimatedCost}} / by @{{date.createdByUsername}}</div>
+        <div class="date-meta">
+            {{date.borough}} / est. ${{date.estimatedCost}} / by
+            <a href="/date/creator/{{date.createdById}}">@{{date.createdByUsername}}</a>
+        </div>
         <div class="date-meta">{{date.createdAt}}</div>
+
+        {{#if date.isCreator}}
+        <div class="creator-controls">
+            {{#if date.isPublic}}
+            <form action="/date/{{date._id}}/private" method="POST" class="form-inline">
+                <button type="submit" class="btn">Make Private</button>
+            </form>
+            {{else}}
+            <form action="/date/{{date._id}}/publish" method="POST" class="form-inline">
+                <button type="submit" class="btn">Publish</button>
+            </form>
+            {{/if}}
+        </div>
+        {{/if}}
+
         <div class="vote-row">
             <form id="upvote-form-{{date._id}}" action="/date/{{date._id}}/upvote" method="POST" class="form-inline">
                 <button type="submit" class="vote-btn up">&#9650; {{date.votes.upvotes}}</button>
@@ -45,6 +63,11 @@
                 {{#if this.notes}}
                 <p>{{this.notes}}</p>
                 {{/if}}
+                {{#if ../date.isCreator}}
+                <form action="/date/{{../date._id}}/spot/{{this._id}}/delete" method="POST" class="form-inline">
+                    <button type="submit" class="btn btn-red">Remove</button>
+                </form>
+                {{/if}}
             </div>
         </div>
         {{#unless @last}}<span class="step-arrow">&#8594;</span>{{/unless}}
@@ -53,19 +76,50 @@
         {{/each}}
     </div>
 
+    {{#if date.isCreator}}
+    <div class="add-spot">
+        <h3>Add a Spot</h3>
+        <form action="/date/{{date._id}}/addSpot" method="POST">
+            <label>Spot ID: <input type="text" name="dateSpotId" required></label>
+            <label>Notes: <textarea name="notes" maxlength="250"></textarea></label>
+            <button type="submit" class="btn">Add</button>
+        </form>
+    </div>
+    {{/if}}
+
     <div class="reviews-section">
         <h2 class="section-title">Comments</h2>
         {{#each date.comments}}
         <div class="appeal-card">
             <div>
                 <span>@{{this.username}}</span>
-                <span class="date-meta">{{this.createdAt}}</span>
+                <span class="date-meta">{{this.createdAt}}{{#if this.editedAt}} (edited {{this.editedAt}}){{/if}}</span>
             </div>
             <p>{{this.text}}</p>
+            {{#if this.canEdit}}
+            <form action="/date/{{../date._id}}/comment/{{this._id}}/edit" method="POST" class="form-inline">
+                <input type="text" name="comment" value="{{this.text}}" maxlength="250" required>
+                <button type="submit" class="btn">Save</button>
+            </form>
+            {{/if}}
+            {{#if this.canDelete}}
+            <form action="/date/{{../date._id}}/comment/{{this._id}}/delete" method="POST" class="form-inline">
+                <button type="submit" class="btn btn-red">Delete</button>
+            </form>
+            {{/if}}
         </div>
         {{else}}
         <p>No comments yet.</p>
         {{/each}}
+
+        {{#if date.isLoggedIn}}
+        <form action="/date/{{date._id}}/comment" method="POST" class="comment-form">
+            <textarea name="comment" placeholder="Add a comment..." maxlength="250" required></textarea>
+            <button type="submit" class="btn">Post</button>
+        </form>
+        {{else}}
+        <p><a href="/login">Log in</a> to comment.</p>
+        {{/if}}
     </div>
 </div>
 
