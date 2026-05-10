@@ -471,6 +471,46 @@ export const getDatesByCreator = async (
     return findDatesByUser;
 };
 
+export const reorderAndUpdateSpots = async (dateId, submittedEvents) => {
+    if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) throw "reorderAndUpdateSpots: invalid dateId.";
+    dateId = dateId.trim();
+    if (!Array.isArray(submittedEvents)) throw "reorderAndUpdateSpots: events must be an array.";
+
+    const datesCollection = await dates();
+    const schedule = await datesCollection.findOne({ _id: new ObjectId(dateId) });
+    if (!schedule) throw "reorderAndUpdateSpots: could not find date.";
+
+    const existingBySpotId = {};
+    for (const ev of schedule.events) {
+        const key = ev.spotId.toString();
+        if (!existingBySpotId[key]) existingBySpotId[key] = [];
+        existingBySpotId[key].push(ev);
+    }
+
+    const usedCounts = {};
+    const updatedEvents = submittedEvents.map((submitted, i) => {
+        const key = submitted.spotId;
+        if (!key || !ObjectId.isValid(key)) throw `reorderAndUpdateSpots: invalid spotId at index ${i}.`;
+        const usedIdx = usedCounts[key] || 0;
+        const existing = existingBySpotId[key]?.[usedIdx];
+        if (!existing) throw `reorderAndUpdateSpots: spotId ${key} not found in this date.`;
+        usedCounts[key] = usedIdx + 1;
+        return {
+            ...existing,
+            order: i + 1,
+            notes: xss((submitted.notes || '').trim())
+        };
+    });
+
+    const result = await datesCollection.findOneAndUpdate(
+        { _id: new ObjectId(dateId) },
+        { $set: { events: updatedEvents } },
+        { returnDocument: "after" }
+    );
+    if (!result) throw "reorderAndUpdateSpots: could not update date.";
+    return result;
+};
+
 export const deleteDateById = async (
     dateId
 ) => {

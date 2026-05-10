@@ -3,6 +3,7 @@ const router = Router();
 import { ObjectId } from 'mongodb';
 import * as dataUsers from '../data/users.js';
 import * as dataDates from '../data/dates.js';
+import { reorderAndUpdateSpots } from '../data/dates.js';
 import * as dataSpots from '../data/spots.js';
 import { dates, members, spots, users } from '../config/mongoCollections.js';
 import * as helper from '../helpers.js';
@@ -426,6 +427,41 @@ router
     });
 
 router
+    .route('/:id/reorder')
+    .post(async (req, res) => {
+        let dateId = req.params.id;
+        if (!dateId || typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) {
+            return res.status(400).render('error', {error: "dateId must be a valid ObjectId.", title: 'Error: Invalid DateId'});
+        }
+        dateId = dateId.trim();
+
+        if (!req.session.member || !req.session.member._id) {
+            return res.status(403).redirect('/signin');
+        }
+        const userId = req.session.member._id;
+
+        try {
+            const date = await dataDates.getDateById(dateId);
+            if (date.createdBy.toString() !== userId) {
+                return res.status(403).render('error', {title: 'Error: Invalid Permissions', error: "Only the creator can reorder spots."});
+            }
+
+            let events = req.body.events;
+            if (!events) events = [];
+            if (!Array.isArray(events)) events = [events];
+            events = events.map(ev => ({
+                spotId: xss((ev.spotId || '').trim()),
+                notes: xss((ev.notes || '').trim())
+            }));
+
+            await reorderAndUpdateSpots(dateId, events);
+            return res.redirect(`/date/${dateId}`);
+        } catch (e) {
+            return res.status(500).render('error', {title: 'Error', error: e});
+        }
+    });
+
+router
     .route('/:id')
     .get(async (req, res) => {
         let dateId = req.params.id;
@@ -463,6 +499,10 @@ router
             });
 
             date._id = date._id.toString();
+            date.events = date.events.map(e => ({
+                ...e,
+                spotId: e.spotId.toString()
+            }));
             date.isCreator = isCreator;
             date.isLoggedIn = !!req.session.member;
             date.isPublic = date.visibility === "public";
