@@ -61,7 +61,7 @@ router
             }
         }
 
-        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !events || !tags) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: all parameters must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
+        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !tags) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: all parameters must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
 
         if (typeof title !== "string" || !title.trim()) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: title must be supplied and must not be a string of empty spaces.", title: "Error: Invalid Title."});
         title = xss(title.trim());
@@ -85,7 +85,7 @@ router
             try { events = JSON.parse(events); }
             catch (e) { return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events must be valid JSON.", title: "Error: Invalid Events."}); }
         }
-        if (!Array.isArray(events) || events.length === 0) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events list must be a list that has at least one event in it.", title: "Error: Invalid Events."});
+        if (!Array.isArray(events) || events.length === 0) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "You need at least one spot. Save a draft first, then visit a spot page and use 'Add to Date' to add spots before publishing.", title: "Error: No Spots Added."});
 
         const validEvents = await helper.isValidEventList(events);
         if (!validEvents) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events list must contain valid events.", title: "Error: Invalid Events."});
@@ -96,7 +96,7 @@ router
         }));
 
         if (typeof tags === "string") {
-            try { tags = JSON.parse(tags); } catch (e) { tags = [tags]; }
+            tags = tags.split(',').map(t => t.trim()).filter(Boolean);
         }
         if (!Array.isArray(tags) || tags.length === 0) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: tags must be a non-empty list.", title: "Error: Invalid Tags."});
         const tag_regex = /^[a-zA-Z]{2,20}$/;
