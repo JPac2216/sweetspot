@@ -1,10 +1,20 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/spots/explore" class="nav-btn">Explore</a>
+        <a href="/spots/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
 <h1>Create a Spot</h1>
 
 {{#if error}}
     <p>{{error}}</p>
 {{/if}}
 
-<form id="appeal-form" name="appeal-form" method="POST" action="/spot/appeal">
+<form id="appeal-form" name="appeal-form" method="POST" action="/spots/appeal">
     <label for="name">Name of the Spot being Created:</label>
     <input type="text" id="name" name="name"/>
 

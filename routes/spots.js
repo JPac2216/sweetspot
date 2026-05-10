@@ -16,9 +16,9 @@ router
             return res.status(403).render('signin', {title: 'Sign In'});
         }
         if (req.session.member.membershipLevel !== 'admin') {
-            return res.status(403).render('userHome', {title: 'User Home'}); 
+            return res.status(403).render('pages/userHome', {title: 'User Home'}); 
         }
-        return res.status(200).render('spotCreate', {title: 'Create Spot'});
+        return res.status(200).render('pages/spotCreate', {title: 'Create Spot'});
     })
     .post(async (req, res) => {
         //code here for POST
@@ -39,14 +39,14 @@ router
         try{
             helpers.validateSpotFields(name, description, address);
         }catch(e){
-            return res.status(400).render('spotCreate', {title: 'Create Spot', error: e});
+            return res.status(400).render('pages/spotCreate', {title: 'Create Spot', error: e});
         }
 
         try{
             let newSpot = await createSpot(name.trim(), description.trim(), address);
             return res.redirect(`/spot/${newSpot._id}`);
         }catch(e){
-            return res.status(400).render('spotCreate', {title: 'Create Spot', error: e});
+            return res.status(400).render('pages/spotCreate', {title: 'Create Spot', error: e});
         }
 
     });
