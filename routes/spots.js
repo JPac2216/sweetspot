@@ -36,6 +36,12 @@ router
             zip: xss(req.body.zip.trim())
         };
 
+        let tags = req.body.tags;
+        if (typeof tags === "string") {
+            tags = tags.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        if (!Array.isArray(tags)) tags = [];
+
         try{
             helpers.validateSpotFields(name, description, address);
         }catch(e){
@@ -43,7 +49,7 @@ router
         }
 
         try{
-            let newSpot = await createSpot(name.trim(), description.trim(), address);
+            let newSpot = await createSpot(name.trim(), description.trim(), address, tags);
             return res.redirect(`/spots/${newSpot._id}`);
         }catch(e){
             return res.status(400).render('pages/spotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});
@@ -75,14 +81,20 @@ router
             zip: xss(req.body.zip.trim())
         };
 
+        let tags = req.body.tags;
+        if (typeof tags === "string") {
+            tags = tags.split(',').map(t => t.trim()).filter(Boolean);
+        }
+        if (!Array.isArray(tags)) tags = [];
+
         try{
             helpers.validateSpotFields(name, description, address);
         }catch(e){
             return res.status(400).render('appealSpotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});
         }
-        
+
         try{
-            await appealSpot(req.session.member._id.toString(), name.trim(), description.trim(), address);
+            await appealSpot(req.session.member._id.toString(), name.trim(), description.trim(), address, tags);
             return res.redirect('/home');
         }catch(e){
             return res.status(400).render('appealSpotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});

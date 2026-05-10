@@ -97,6 +97,7 @@ export const addToSchedule = async (
     if (!schedule) throw "addToSchedule: could not find schedule in the database.";
 
     const spotToInsert = {
+        "_id": new ObjectId(),
         "order": schedule.events.length + 1,
         "spotId": dateSpot._id,
         "spotName": dateSpot.name,
@@ -128,14 +129,19 @@ export const deleteFromSchedule = async (
 
     let events = schedule.events;
     let changed = false;
+    const targetId = new ObjectId(dateSpotId);
     for (let i = 0; i < events.length; i++) {
-        if (events[i]._id.equals(new ObjectId(dateSpotId))) {
+        if (events[i]._id && events[i]._id.equals(targetId)) {
             events.splice(i, 1);
             changed = true;
             break;
         }
     }
-    if (!changed) throw "addToSchedule: unable to remove spot from the date schedule.";
+    if (!changed) throw "deleteFromSchedule: unable to remove spot from the date schedule.";
+
+    for (let i = 0; i < events.length; i++) {
+        events[i].order = i + 1;
+    }
 
     const successfulAddition = await datesCollection.findOneAndUpdate({ _id: new ObjectId(dateId) }, { $set: { events } }, { returnDocument: "after" });
     if (!successfulAddition) throw "addToSchedule: could not add the spot to the date specified.";
