@@ -33,47 +33,68 @@
         <form class="form-box" action="/user/profile/edit" method="POST">
             <div class="form-group">
                 <label for="firstName">First Name</label>
-                <input type="text" id="firstName" name="firstName" value="{{member.firstName}}">
+                <input type="text" id="firstName" name="firstName" class="firstName"
+                       pattern="[a-zA-Z]{2,20}"
+                       title="2-20 letters only"
+                       value="{{member.firstName}}">
             </div>
 
             <div class="form-group">
                 <label for="lastName">Last Name</label>
-                <input type="text" id="lastName" name="lastName" value="{{member.lastName}}">
+                <input type="text" id="lastName" name="lastName" class="lastName"
+                       pattern="[a-zA-Z]{2,20}"
+                       title="2-20 letters only"
+                       value="{{member.lastName}}">
             </div>
 
             <div class="form-group">
                 <label for="username">Username</label>
-                <input type="text" id="username" name="username" value="{{member.username}}">
+                <input type="text" id="username" name="username" class="username"
+                       pattern="[a-zA-Z0-9_]{3,20}"
+                       title="3-20 characters, letters, numbers, and underscores only"
+                       value="{{member.username}}">
             </div>
 
             <div class="form-group">
                 <label for="editEmail">Email</label>
-                <input type="email" id="editEmail" name="email" value="{{member.email}}">
+                <input type="email" id="editEmail" name="email" class="email"
+                       value="{{member.email}}">
             </div>
 
             <div class="form-group">
                 <label for="gender">Gender</label>
-                <input type="text" id="gender" name="gender" value="{{member.gender}}">
+                <input type="text" id="gender" name="gender" class="gender"
+                       pattern="male|female|non-binary|other"
+                       title="Must be: male, female, non-binary, or other"
+                       value="{{member.gender}}">
             </div>
 
             <div class="form-group">
                 <label for="primaryLocation">Primary Location</label>
-                <input type="text" id="primaryLocation" name="primaryLocation" value="{{member.primaryLocation}}">
+                <input type="text" id="primaryLocation" name="primaryLocation" class="primaryLocation"
+                       pattern="the bronx|queens|manhattan|staten island|brooklyn"
+                       title="Must be one of the 5 NYC boroughs"
+                       value="{{member.primaryLocation}}">
             </div>
 
             <div class="form-group">
                 <label for="secondaryLocation">Secondary Location (optional)</label>
-                <input type="text" id="secondaryLocation" name="secondaryLocation" value="{{member.secondaryLocation}}">
+                <input type="text" id="secondaryLocation" name="secondaryLocation" class="secondaryLocation"
+                       pattern="the bronx|queens|manhattan|staten island|brooklyn"
+                       title="Must be one of the 5 NYC boroughs"
+                       value="{{member.secondaryLocation}}">
             </div>
 
             <div class="form-group">
                 <label for="currentPassword">Current Password</label>
-                <input type="password" id="currentPassword" name="currentPassword" required>
+                <input type="password" id="currentPassword" name="currentPassword" class="currentPassword" required>
             </div>
 
             <div class="form-group">
                 <label for="newPassword">New Password (leave blank to keep current)</label>
-                <input type="password" id="newPassword" name="newPassword">
+                <input type="password" id="newPassword" name="newPassword" class="newPassword"
+                       pattern="(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ]).{8,}"
+                       title="At least 8 characters with one uppercase letter, one number, and one special character">
             </div>
 
             <div class="btn-row">

@@ -6,6 +6,7 @@ import * as dateData from '../data/dates.js';
 import * as helper from '../helpers.js';
 import { dates, spots, users, members, appeals } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
+import xss from 'xss';
 
 router
     .route('/')
@@ -23,7 +24,7 @@ router
     .route('/appeals/:id/approve')
     .post(async (req, res) => {
         try {
-            const appealId = req.params.id;
+            const appealId = req.params.id ? xss(req.params.id) : undefined;
             if (!appealId) throw "approveAppeal: appealId field must be supplied.";
             if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "approveAppeal: appealId field must be of type string and must be a valid ObjectId.";
 
@@ -38,7 +39,7 @@ router
     .route('/appeals/:id/reject')
     .post(async (req, res) => {
         try {
-            const appealId = req.params.id;
+            const appealId = req.params.id ? xss(req.params.id) : undefined;
             if (!appealId) throw "rejectAppeal: appealId field must be supplied.";
             if (typeof appealId !== "string" || !ObjectId.isValid(appealId.trim())) throw "rejectAppeal: appealId field must be of type string and must be a valid ObjectId.";
             
@@ -53,7 +54,7 @@ router
     .route('/dates/:id/delete')
     .post(async (req, res) => {
         try {
-            const dateId = req.params.id;
+            const dateId = req.params.id ? xss(req.params.id) : undefined;
             if (!dateId) throw "deleteDateById: dateId field must be supplied.";
             if (typeof dateId !== "string" || !ObjectId.isValid(dateId.trim())) throw "deleteDate: dateId field must be of type string and must be a valid ObjectId.";
 

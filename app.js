@@ -40,7 +40,7 @@ app.use('/signin', async (req, res, next) => {
 
 app.use('/register', async (req, res, next) => {
     if (req.method !== "GET" || !req.session.member) return next();
-    if (req.session.member.membershipLevel === 'admin') res.redirect('/admin');
+    if (req.session.member.membershipLevel === 'admin') return res.redirect('/admin');
     return res.redirect('/home');
 });
 
@@ -59,6 +59,13 @@ app.use('/admin', async (req, res, next) => {
 
 
 configRoutes(app);
+
+// Fallback case for if there is an error that we couldn't/didn't anticipate.
+// This will allow us to be extra safe with any errors that may come in the routing.
+app.use((err, req, res, next) => {
+    console.log(err);
+    res.status(500).render('error', { title: 'Server Error', error: err });
+});
 
 app.listen(3000, () => {
   console.log("We've now got a server!");
