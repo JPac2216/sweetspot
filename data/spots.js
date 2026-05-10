@@ -21,9 +21,28 @@ const validateSpotFields = (name, description, address) => {
     address.zip = xss(address.zip.trim());
 };
 
-export const createSpot = async (name, description, address) => {
+const validateAndCleanTags = (tags) => {
+    if (tags === undefined || tags === null) return [];
+    if (!Array.isArray(tags)) throw "tags must be an array of strings.";
+    const tag_regex = /^[a-zA-Z]{2,20}$/;
+    const cleaned = [];
+    for (let tag of tags) {
+        if (typeof tag !== "string" || !tag_regex.test(tag.trim())) throw "tags must be 2 to 20 characters in length and consist of letters only.";
+        cleaned.push(xss(tag.trim().toLowerCase()));
+    }
+    return cleaned;
+};
+
+export const createSpot = async (name, description, address, tags) => {
     try {
         validateSpotFields(name, description, address);
+    } catch (e) {
+        throw `createSpot: ${e}`;
+    }
+
+    let cleanTags;
+    try {
+        cleanTags = validateAndCleanTags(tags);
     } catch (e) {
         throw `createSpot: ${e}`;
     }
@@ -33,6 +52,7 @@ export const createSpot = async (name, description, address) => {
         name: xss(name.trim()),
         description: xss(description.trim()),
         address,
+        tags: cleanTags,
         sweetspotRating: { average: null, count: 0, sum: 0 },
         reviews: []
     };
@@ -44,12 +64,19 @@ export const createSpot = async (name, description, address) => {
     return { spotCreated: true, _id: spotObj._id.toString() };
 };
 
-export const appealSpot = async (userId, name, description, address) => {
+export const appealSpot = async (userId, name, description, address, tags) => {
     if (!userId) throw "appealSpot: userId must be supplied.";
     if (!ObjectId.isValid(userId)) throw "appealSpot: userId is not a valid ObjectId.";
 
     try {
         validateSpotFields(name, description, address);
+    } catch (e) {
+        throw `appealSpot: ${e}`;
+    }
+
+    let cleanTags;
+    try {
+        cleanTags = validateAndCleanTags(tags);
     } catch (e) {
         throw `appealSpot: ${e}`;
     }
@@ -62,7 +89,8 @@ export const appealSpot = async (userId, name, description, address) => {
         spotData: {
             name: xss(name.trim()),
             description: xss(description.trim()),
-            address
+            address,
+            tags: cleanTags
         }
     };
 
@@ -93,7 +121,8 @@ export const approveAppeal = async (
     const insertSpot = await createSpot(
         spotData.name,
         spotData.description,
-        spotData.address
+        spotData.address,
+        spotData.tags || []
     );
 
     if (!insertSpot) throw "approveAppeal: spot creation and insertion into the database failed.";
@@ -142,11 +171,12 @@ export const addReview = async (
     review,
     rating
 ) => {
-    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || !rating || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
+    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || rating === undefined || rating === null || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
     spotId = spotId.trim();
     userId = userId.trim();
     review = xss(review.trim());
-    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, username and review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
+    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review) throw "addReview: userId parameter must be an ObjectId, username and review parameters must be strings.";
+    if (Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: rating parameter must be a valid integer between 1 and 5.";
 
     const usersCollection = await users();
     const findUser = await usersCollection.findOne({ _id: new ObjectId(userId)});

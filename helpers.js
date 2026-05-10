@@ -212,11 +212,12 @@ export const validateSpotFields = (name, description, address) => {
 
 export const validateReviewFields = async (spotId,userId, review, rating) => {
 
-    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || !rating || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
+    if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || rating === undefined || rating === null || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
     spotId = spotId.trim();
     userId = userId.trim();
     review = review.trim();
-    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
+    if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review) throw "addReview: userId parameter must be an ObjectId, review parameters must be strings.";
+    if (Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: rating parameter must be a valid integer between 1 and 5.";
 
     const usersCollection = await users();
     const findUser = await usersCollection.findOne({ _id: new ObjectId(userId)});

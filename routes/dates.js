@@ -111,7 +111,9 @@ router
             const upvotes = date.votes.filter(v => v.value === 1).length;
             const downvotes = date.votes.filter(v => v.value === -1).length;
 
-            if (req.xhr) {
+            const acceptHdr = (req.get('Accept') || '').toLowerCase();
+            const wantsJson = req.xhr || acceptHdr.includes('application/json');
+            if (wantsJson) {
                 return res.json({ upvotes, downvotes });
             }
             return res.redirect(`/date/${dateId}`);
@@ -139,7 +141,8 @@ router
             const date = await dataDates.getDateById(dateId);
             const upvotes = date.votes.filter(v => v.value === 1).length;
             const downvotes = date.votes.filter(v => v.value === -1).length;
-            if (req.xhr) {
+            const wantsJson = req.xhr || (req.get('Accept') || '').toLowerCase().includes('application/json');
+            if (wantsJson) {
                 return res.json({ upvotes, downvotes });
             }
             return res.redirect(`/date/${dateId}`);
@@ -507,6 +510,7 @@ router
             date._id = date._id.toString();
             date.events = date.events.map(e => ({
                 ...e,
+                _id: e._id ? e._id.toString() : null,
                 spotId: e.spotId.toString()
             }));
             date.isCreator = isCreator;

@@ -29,6 +29,13 @@
 
     <div class="card">
         <p>{{spot.description}}</p>
+        {{#if spot.tags.length}}
+        <div class="tags">
+            {{#each spot.tags}}
+            <span class="tag">{{this}}</span>
+            {{/each}}
+        </div>
+        {{/if}}
     </div>
 
     <div class="reviews-section">

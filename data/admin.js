@@ -14,7 +14,8 @@ export const editSpot = async (
     description,
     address
 ) => {
-    if (!spotId || typeof spotId !== "string") throw "editSpot: spotId must be supplied in order to use this function.";
+    if (!spotId) throw "editSpot: spotId must be supplied in order to use this function.";
+    if (typeof spotId !== "string") throw "editSpot: spotId must be a string.";
     spotId = spotId.trim();
     if (!ObjectId.isValid(spotId)) throw "editSpot: spotId must be a valid ObjectId.";
     let updateObj = {};

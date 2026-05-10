@@ -64,11 +64,16 @@ const transformRecord = (raw) => {
             .replace(/\s+/g, ' ')
             .trim();
 
+    const cuisineTag = (raw.cuisine_description || '').trim().toLowerCase().replace(/[^a-z]/g, '').slice(0, 20);
+    const tags = ['food'];
+    if (cuisineTag && cuisineTag.length >= 2) tags.push(cuisineTag);
+
     return {
         _id: new ObjectId(),
         name,
         description,
         address: { street, borough, zip },
+        tags,
         sweetspotRating: { average: null, count: 0 },
         reviews: []
     };
