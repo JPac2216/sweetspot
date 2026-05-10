@@ -114,7 +114,7 @@ router
     }
 
     try{
-      let newUser = await createUser(validated.firstName, validated.lastName, validated.email, validated.username, validated.password, validated.gender, validated.primaryLocation, validated.secondaryLocation);
+      let newUser = await createUser(validated.firstName, validated.lastName, validated.email, validated.username, validated.password, validated.confirmPassword, validated.gender, validated.primaryLocation, validated.secondaryLocation);
       if(newUser.memberCreated !== true || !newUser){
         return res.status(500).render('register', {error: 'Failed to create user', title: 'Error: Internal Server Error'});
       }else{

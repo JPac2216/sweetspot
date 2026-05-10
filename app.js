@@ -60,6 +60,13 @@ app.use('/admin', async (req, res, next) => {
 
 configRoutes(app);
 
+// Fallback case for if there is an error that we couldn't/didn't anticipate.
+// This will allow us to be extra safe with any errors that may come in the routing.
+app.use((err, req, res, next) => {
+    console.log(err);
+    res.status(500).render('error', { title: 'Server Error', error: err });
+});
+
 app.listen(3000, () => {
   console.log("We've now got a server!");
   console.log('Your routes will be running on http://localhost:3000');

@@ -1,5 +1,6 @@
 import { ObjectId } from 'mongodb';
 import { dates, spots, users } from './config/mongoCollections.js';
+import xss from 'xss';
 
 // HARDCODE ALL THE BOROUGHS HERE
 export const boroughs = ["the bronx", "queens", "manhattan", "staten island", "brooklyn"];
@@ -100,14 +101,14 @@ export const validateUser = async (
         if (typeof firstName !== "string" || firstName.trim().length === 0 || !name_regex.test(firstName.trim())){ 
             throw "First name must be a string between 2 and 20 characters in length only containing letters.";
         }
-        firstName = firstName.trim();
+        firstName = xss(firstName.trim());
     }
 
     if (!isUpdating || lastName) {
         if (typeof lastName !== "string" || lastName.trim().length === 0 || !name_regex.test(lastName.trim())){
             throw "Last name must be a string between 2 and 20 characters in length only containing letters.";
         }
-        lastName = lastName.trim();
+        lastName = xss(lastName.trim());
     }
 
     if (!isUpdating || email) {
@@ -115,7 +116,7 @@ export const validateUser = async (
         if (typeof email !== "string" || email.trim().length === 0 || !email_regex.test(email.trim())){
             throw "Email must be a valid email address.";
         }
-        email = email.trim().toLowerCase();
+        email = xss(email.trim().toLowerCase());
         // Only check duplicate email on create
         if (!isUpdating) {
             const usersCollection = await users();
@@ -131,7 +132,7 @@ export const validateUser = async (
         if (typeof username !== "string" || username.trim().length === 0 || !username_regex.test(username.trim())){
             throw "Username must be a string between 3 and 20 characters in length only containing letters, numbers, and underscores.";
         }
-        username = username.trim().toLowerCase();
+        username = xss(username.trim().toLowerCase());
         const usersCollection = await users();
         const usernameQuery = isUpdating && currentUserId
             ? { username, _id: { $ne: new ObjectId(currentUserId) } }
@@ -155,14 +156,14 @@ export const validateUser = async (
         if (typeof gender !== "string" || gender.trim().length === 0 || !gender_regex.test(gender.trim())){ 
             throw "Gender must be a string that is recognized by our system.";
         }
-        gender = gender.trim();
+        gender = xss(gender.trim());
     }
 
     if (!isUpdating || primaryLocation) {
         if(typeof primaryLocation !== "string" || !boroughs.includes(primaryLocation.trim().toLowerCase())){
             throw "Primary location must be one of the 5 boroughs of NYC.";
         }
-        primaryLocation = primaryLocation.trim().toLowerCase();
+        primaryLocation = xss(primaryLocation.trim().toLowerCase());
     }
 
     if (!secondaryLocation || secondaryLocation.trim().length === 0) {
@@ -174,10 +175,10 @@ export const validateUser = async (
         if (primaryLocation && primaryLocation.toLowerCase() === secondaryLocation.trim().toLowerCase()){ 
             throw "Primary location and secondary location cannot be the same.";
         }
-        secondaryLocation = secondaryLocation.trim().toLowerCase();
+        secondaryLocation = xss(secondaryLocation.trim().toLowerCase());
     }
 
-    return { firstName, lastName, email, username, password, gender, primaryLocation, secondaryLocation };
+    return { firstName, lastName, email, username, password, confirmPassword, gender, primaryLocation, secondaryLocation };
 };
 
 export const checkObjectID = (id) => {

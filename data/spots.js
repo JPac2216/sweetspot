@@ -1,17 +1,24 @@
 import { spots, appeals, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import * as helper from '../helpers.js';
+import xss from 'xss';
 
 const validateSpotFields = (name, description, address) => {
     if (!name || !description || !address) throw "all parameters must be supplied.";
     const basic_regex = /^[a-zA-Z0-9 ,#]{2,25}$/;
     if (typeof name !== "string" || !basic_regex.test(name.trim())) throw "name must be a valid name consisting of letters, numbers, or spaces.";
+    name = xss(name.trim());
     if (typeof description !== "string" || !description.trim()) throw "description must be a non-empty string.";
+    description = xss(description.trim());
     const address_fields = ["street", "borough", "zip"];
     if (!address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "address must contain only street, borough, and zip.";
     if (!basic_regex.test(address.street)) throw "address.street must contain only letters, numbers, commas, spaces, or hashtags.";
-    if (!helper.boroughs.includes(address.borough.toLowerCase())) throw "address.borough must be a recognized borough in our system.";
-    if (typeof address.zip !== "number" || Number.isNaN(address.zip) || !Number.isFinite(address.zip)) throw "address.zip must be a valid zip code.";
+    address.street = xss(address.street.trim());
+    if (!helper.boroughs.includes(address.borough.trim().toLowerCase())) throw "address.borough must be a recognized borough in our system.";
+    address.borough = xss(address.borough.trim());
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    if (typeof address.zip !== "string" || !zipRegex.test(address.zip.trim())) throw "address.zip must be a valid zip code.";
+    address.zip = xss(address.zip.trim());
 };
 
 export const createSpot = async (name, description, address) => {
@@ -23,8 +30,8 @@ export const createSpot = async (name, description, address) => {
 
     const spotObj = {
         _id: new ObjectId(),
-        name: name.trim(),
-        description: description.trim(),
+        name: xss(name.trim()),
+        description: xss(description.trim()),
         address,
         sweetspotRating: { average: null, count: 0 },
         reviews: []
@@ -53,8 +60,8 @@ export const appealSpot = async (userId, name, description, address) => {
         status: "pending",
         submittedAt: helper.getDateTime(),
         spotData: {
-            name: name.trim(),
-            description: description.trim(),
+            name: xss(name.trim()),
+            description: xss(description.trim()),
             address
         }
     };
@@ -138,7 +145,7 @@ export const addReview = async (
     if (!spotId || typeof spotId !== "string" || !userId || typeof userId !== "string" || !review || typeof review !== "string" || !rating || typeof rating !== "number") throw "addReview: all parameters must be supplied to this function.";
     spotId = spotId.trim();
     userId = userId.trim();
-    review = review.trim();
+    review = xss(review.trim());
     if (!ObjectId.isValid(spotId) || !ObjectId.isValid(userId) || !review || Number.isNaN(rating) || !Number.isFinite(rating) || !Number.isInteger(rating) || rating > 5 || rating < 1) throw "addReview: userId parameter must be an ObjectId, username and review parameters must be strings, and rating parameter must be a valid number between 1 and 5.";
 
     const usersCollection = await users();
