@@ -1,34 +1,6 @@
 {{> navbar}}
 
 <div class="page">
-    <form id="filter-form" class="filter-bar" method="GET">
-
-        <div class="filter-group">
-            <button type="button" class="btn filter-toggle" onclick="toggleFilter(this)">Tags</button>
-            <div class="filter-dropdown">
-                <label><input type="checkbox" id="tags-outdoor" name="tags" class="tags" value="outdoor"> Outdoor</label>
-                <label><input type="checkbox" id="tags-indoor" name="tags" class="tags" value="indoor"> Indoor</label>
-                <label><input type="checkbox" id="tags-food" name="tags" class="tags" value="food"> Food</label>
-                <label><input type="checkbox" id="tags-free" name="tags" class="tags" value="free"> Free</label>
-                <label><input type="checkbox" id="tags-nightlife" name="tags" class="tags" value="nightlife"> Nightlife</label>
-                <label><input type="checkbox" id="tags-romantic" name="tags" class="tags" value="romantic"> Romantic</label>
-                <label><input type="checkbox" id="tags-adventure" name="tags" class="tags" value="adventure"> Adventure</label>
-            </div>
-        </div>
-
-        <div class="filter-group">
-            <button type="button" class="btn filter-toggle" onclick="toggleFilter(this)">Cost</button>
-            <div class="filter-dropdown">
-                <label><input type="radio" id="cost-any" name="cost" class="cost" value=""> Any</label>
-                <label><input type="radio" id="cost-1" name="cost" class="cost" value="1"> $ </label>
-                <label><input type="radio" id="cost-2" name="cost" class="cost" value="2"> $$ </label>
-                <label><input type="radio" id="cost-3" name="cost" class="cost" value="3"> $$$ </label>
-            </div>
-        </div>
-
-        <button id="apply-filters" type="submit" class="btn btn-filled">Apply</button>
-    </form>
-
     <div class="card-grid">
         {{#each spots}}
         <a href="/spots/{{this._id}}" class="date-card">
@@ -47,5 +19,3 @@
 
     <p>Locations based on your profile settings</p>
 </div>
-
-{{> filterDropdown}}
