@@ -72,7 +72,7 @@ router
     };
 
     if (user.membershipLevel === 'admin') {
-      return res.render('pages/adminDashboard', {title: 'Admin Dashboard'});
+      return res.redirect('/admin');
     } else {
       return res.redirect('/home');
     }

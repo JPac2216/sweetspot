@@ -2,6 +2,7 @@ import { dates, spots, users } from '../config/mongoCollections.js';
 import { ObjectId } from 'mongodb';
 import * as helper from '../helpers.js';
 import bcrypt from 'bcrypt';
+import xss from 'xss';
 const saltRounds = 16;
 
 
@@ -15,17 +16,17 @@ export const createDate = async (
     events,
     tags
 ) => {
-    if (title === undefined || description === undefined || createdBy === undefined || visibility === undefined || borough === undefined || estimatedCost === undefined || events === undefined || tags === undefined || datepointCost === undefined) throw "createDate: all parameters must be supplied in order to create the date.";
+    if (title === undefined || description === undefined || createdBy === undefined || visibility === undefined || borough === undefined || estimatedCost === undefined || events === undefined || tags === undefined) throw "createDate: all parameters must be supplied in order to create the date.";
     if (typeof title !== "string" || !title.trim()) throw "createDate: title must be supplied and must not be a string of empty spaces.";
-    title = title.trim();
+    title = xss(title.trim());
     if (typeof description !== "string" || !description.trim()) throw "createDate: description must be supplied and must not be a string of empty spaces.";
-    description = description.trim();
+    description = xss(description.trim());
     if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) throw "createDate: createdBy must be a valid ObjectId.";
-    createdBy = createdBy.trim();
+    createdBy = xss(createdBy.trim());
     if (typeof visibility !== "string" || (visibility.trim() !== "public" && visibility.trim() !== "private")) throw "createDate: visibility must either be public or private.";
-    visibility = visibility.trim();
+    visibility = xss(visibility.trim());
     if (typeof borough !== "string" || !helper.boroughs.includes(borough.trim().toLowerCase())) throw "createDate: borough parameter must be a string that is a borough registered in our system.";
-    borough = borough.trim().toLowerCase();
+    borough = xss(borough.trim().toLowerCase());
     if (typeof estimatedCost !== "number" || Number.isNaN(estimatedCost) || !Number.isFinite(estimatedCost)) throw "createDate: estimatedCost parameter must be a valid, finite number.";
     if (!Array.isArray(events) || events.length === 0) throw "createDate: events list must be a list that has at least one event in it.";
     const validEvents = await helper.isValidEventList(events);
@@ -35,7 +36,7 @@ export const createDate = async (
     for (let tag of tags) {
         if (typeof tag !== "string" || !tag_regex.test(tag.trim())) throw "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.";
     }
-    tags = tags.map(t => t.trim());
+    tags = tags.map(t => xss(t.trim()));
 
     const currentTime = helper.getDateTime();
     const dateObj = {
@@ -65,6 +66,92 @@ export const createDate = async (
 };
 
 
+export const saveDraft = async (
+    createdBy,
+    title,
+    description,
+    borough,
+    estimatedCost,
+    events,
+    tags
+) => {
+    if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) throw "saveDraft: createdBy must be a valid ObjectId.";
+    createdBy = createdBy.trim();
+
+    if (typeof title === "string" && title.trim()) {
+        title = xss(title.trim());
+    } else {
+        title = "Untitled Draft";
+    }
+    if (typeof description === "string" && description.trim()) {
+        description = xss(description.trim());
+    } else {
+        description = "(draft - no description yet)";
+    }
+
+    if (typeof borough === "string" && helper.boroughs.includes(borough.trim().toLowerCase())) {
+        borough = xss(borough.trim().toLowerCase());
+    } else {
+        borough = "manhattan";
+    }
+
+    estimatedCost = Number(estimatedCost);
+    if (!Number.isFinite(estimatedCost)) estimatedCost = 0;
+
+    if (!Array.isArray(events)) events = [];
+    let cleanedEvents = [];
+    for (let i = 0; i < events.length; i++) {
+        let ev = events[i];
+        let notes = "";
+        if (typeof ev.notes === "string") notes = xss(ev.notes.trim());
+        cleanedEvents.push({
+            order: ev.order,
+            spotId: ev.spotId,
+            spotName: ev.spotName,
+            notes: notes
+        });
+    }
+    events = cleanedEvents;
+
+    if (!Array.isArray(tags)) tags = [];
+    const tag_regex = /^[a-zA-Z]{2,20}$/;
+    let cleanedTags = [];
+    for (let i = 0; i < tags.length; i++) {
+        if (typeof tags[i] === "string" && tag_regex.test(tags[i].trim())) {
+            cleanedTags.push(xss(tags[i].trim()));
+        }
+    }
+    if (!cleanedTags.includes("Draft")) cleanedTags.push("Draft");
+    tags = cleanedTags;
+
+    const currentTime = helper.getDateTime();
+    const dateObj = {
+        _id: new ObjectId(),
+        title,
+        description,
+        createdBy: new ObjectId(createdBy),
+        visibility: "private",
+        borough,
+        estimatedCost,
+        events,
+        tags,
+        votes: [],
+        voteCount: 0,
+        comments: [],
+        createdAt: currentTime,
+        updatedAt: currentTime
+    };
+
+    const datesCollection = await dates();
+    const success = await datesCollection.insertOne(dateObj);
+    if (!success.acknowledged || !success.insertedId) throw "saveDraft: couldn't insert the draft into the database.";
+
+    dateObj._id = dateObj._id.toString();
+    dateObj.createdBy = dateObj.createdBy.toString();
+    return dateObj;
+};
+
+
 export const addToSchedule = async (
     dateId,
     dateSpotId,
@@ -76,7 +163,7 @@ export const addToSchedule = async (
     if (!ObjectId.isValid(dateId) || !ObjectId.isValid(dateSpotId)) throw "addToSchedule: dateId and dateSpotId must be a valid ObjectIds.";
 
     if (notes && typeof notes === "string") {
-        notes = notes.trim();
+        notes = xss(notes.trim());
     }
     else if (notes && typeof notes !== "string") {
         throw "addToSchedule: if supplying notes to this function, it must be of the type string.";
@@ -126,7 +213,7 @@ export const deleteFromSchedule = async (
     let events = schedule.events;
     let changed = false;
     for (let i = 0; i < events.length; i++) {
-        if (events[i]._id === new ObjectId(dateSpotId)) {
+        if (events[i]._id.equals(new ObjectId(dateSpotId))) {
             events.splice(i, 1);
             changed = true;
             break;
@@ -186,7 +273,7 @@ export const addComment = async (
     if (!ObjectId.isValid(dateId)) throw "addComment: dateId parameter must be a valid ObjectId.";
 
     if (typeof comment !== "string" || !comment.trim()) throw "addComment: comment must be supplied and must not be a string of empty spaces.";
-    comment = comment.trim();
+    comment = xss(comment.trim());
     if (comment.length > 250) throw "addComment: comment cannot be longer than 250 characters.";
 
     const datesCollection = await dates();
@@ -258,7 +345,7 @@ export const editComment = async (
     if (!ObjectId.isValid(commentId)) throw "editComment: commentId parameter must be a valid ObjectId.";
 
     if (typeof comment !== "string" || !comment.trim()) throw "editComment: comment must be supplied and must not be a string of empty spaces.";
-    comment = comment.trim();
+    comment = xss(comment.trim());
     if (comment.length > 250) throw "editComment: comment cannot be longer than 250 characters.";
 
     const datesCollection = await dates();

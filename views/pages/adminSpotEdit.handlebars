@@ -1,0 +1,26 @@
+{{> navbar}}
+
+<main class="page-narrow">
+    <h1>Edit "{{spot.name}}"</h1>
+    <form id="edit-spot-form" action="/admin/spots/{{spot._id}}/edit" method="POST" class="form-box">
+        <label>Name <input name="name" value="{{spot.name}}"></label>
+        <label>Description <textarea name="description">{{spot.description}}</textarea></label>
+        <fieldset>
+            <legend>Address</legend>
+            <label>Street <input name="street" value="{{spot.address.street}}"></label>
+            <label>Borough
+                <select name="borough">
+                    <option value="">— no change —</option>
+                    <option value="manhattan">Manhattan</option>
+                    <option value="brooklyn">Brooklyn</option>
+                    <option value="queens">Queens</option>
+                    <option value="the bronx">The Bronx</option>
+                    <option value="staten island">Staten Island</option>
+                </select>
+            </label>
+            <label>ZIP <input name="zip" value="{{spot.address.zip}}"></label>
+        </fieldset>
+        <div id="error-container" class="error-container hidden"></div>
+        <button type="submit" class="btn btn-blue">Save changes</button>
+    </form>
+</main>

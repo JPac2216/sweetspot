@@ -14,8 +14,9 @@ router
         try {
             const appeals = await spotData.getAllPendingAppeals();
             const flaggedDates = [];
-            return res.status(200).render('adminDashboard', { title: "Admin Dashboard", appeals, flaggedDates});
+            return res.status(200).render('pages/adminDashboard', { title: "Admin Dashboard", appeals, flaggedDates, isAdmin: true});
         } catch (e) {
+            console.log(e);
             return res.status(500).render('error', { title: "Error", error: e });
         }
     });
@@ -62,6 +63,38 @@ router
             if (!deleted) throw "deleteDateById: date could not be deleted from the database.";
 
             return res.redirect('/admin');
+        } catch (e) {
+            return res.status(400).render('error', { title: "Error", error: e });
+        }
+    });
+
+router
+    .route('/spots/:id/edit')
+    .get(async (req, res) => {
+        try {
+            const spotId = req.params.id;
+            if (!ObjectId.isValid(spotId.trim())) throw "spotId is not a valid ObjectId.";
+            const spot = await spotData.getSpotById(spotId.trim());
+            return res.status(200).render('pages/adminSpotEdit', { title: "Edit Spot", spot, isAdmin: true });
+        } catch (e) {
+            return res.status(400).render('error', { title: "Error", error: e });
+        }
+    })
+    .post(async (req, res) => {
+        try {
+            const spotId = req.params.id;
+            if (!ObjectId.isValid(spotId.trim())) throw "spotId is not a valid ObjectId.";
+
+            const { name, description, street, borough, zip } = req.body;
+            const address = (street || borough || zip) ? { street: xss(street), borough: xss(borough), zip: xss(zip) } : undefined;
+
+            await adminData.editSpot(
+                spotId.trim(),
+                name ? xss(name) : undefined,
+                description ? xss(description) : undefined,
+                address
+            );
+            return res.redirect(`/spots/${spotId.trim()}`);
         } catch (e) {
             return res.status(400).render('error', { title: "Error", error: e });
         }

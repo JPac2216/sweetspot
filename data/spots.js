@@ -33,7 +33,7 @@ export const createSpot = async (name, description, address) => {
         name: xss(name.trim()),
         description: xss(description.trim()),
         address,
-        sweetspotRating: { average: null, count: 0 },
+        sweetspotRating: { average: null, count: 0, sum: 0 },
         reviews: []
     };
 
@@ -164,8 +164,14 @@ export const addReview = async (
             $set: {
                 "sweetspotRating.count": { $add: ["$sweetspotRating.count", 1]},
                 "sweetspotRating.sum": { $add: ["$sweetspotRating.sum", rating]},
-                reviews: { 
-                    $concatArrays: ["$reviews", 
+            }
+        },
+        {
+            $set: {
+                "sweetspotRating.average": {
+                    $divide: ["$sweetspotRating.sum", "$sweetspotRating.count"]
+                },
+                reviews: { $concatArrays: ["$reviews", 
                     [{
                         _id: new ObjectId(),
                         userId: new ObjectId(userId),
@@ -219,18 +225,22 @@ export const deleteReview = async (
 };
 
 export const getAllSpots = async (
-    filter
+    borough
 ) => {
-    const spotsCollection = await spots();
-    const allSpotsFiltered = await spotsCollection.find(filter).toArray();
-
-    if (!allSpotsFiltered) throw "getAllSpots: couldn't retrieve any spots that match with the filter supplied.";
-    for (let spot of allSpotsFiltered) {
-        spot._id = spot._id.toString();
+    const query = {};
+    if (typeof borough === 'string' && borough.trim()) {
+        if (!helper.boroughs.includes(borough.trim().toLowerCase())) {
+            throw "getAllSpots: borough must be a recognized borough.";
+        }
+        query['address.borough'] = borough.trim();
     }
-
-    return allSpotsFiltered;
+    const spotsCollection = await spots();
+    const allSpots = await spotsCollection.find(query).toArray();
+    for (const spot of allSpots) spot._id = spot._id.toString();
+    return allSpots;
 };
+
+
 
 export const getSpotById = async (
     spotId

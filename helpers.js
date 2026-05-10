@@ -14,7 +14,7 @@ export const isValidEventList = async (events) => {
         if (!(hasAllFields && Object.keys(events[i]))) return false;
         const currentEvent = events[i];
         if (currentEvent["order"] !== (i + 1)) return false;
-        if (!ObjectId.isValid(currentEvent["spotId"].trim())) return false;
+        if (!ObjectId.isValid(currentEvent["spotId"].toString().trim())) return false;
         const exists = await spotsCollection.findOne({ _id: new ObjectId(currentEvent["spotId"].trim()) });
         if (!exists) return false;
     }
@@ -137,10 +137,8 @@ export const validateUser = async (
         const usernameQuery = isUpdating && currentUserId
             ? { username, _id: { $ne: new ObjectId(currentUserId) } }
             : { username };
-        const existingUsername = await usersCollection.findOne(usernameQuery);
-        if (existingUsername){
-            throw "A user with that username already exists in the database!";
-        }
+        const existing = await usersCollection.findOne({ username: username.toLowerCase() });
+        if (existing && (!isUpdating || !currentUserId || existing._id.toString() !== currentUserId)) throw 'A user with that username already exists in the database!';
     }
 
     if (!isUpdating || password) {
@@ -197,12 +195,18 @@ export const validateSpotFields = (name, description, address) => {
     if (!name || !description || !address) throw "all parameters must be supplied.";
     const basic_regex = /^[a-zA-Z0-9 ,#]{2,25}$/;
     if (typeof name !== "string" || !basic_regex.test(name.trim())) throw "name must be a valid name consisting of letters, numbers, or spaces.";
+    name = xss(name.trim());
     if (typeof description !== "string" || !description.trim()) throw "description must be a non-empty string.";
+    description = xss(description.trim());
     const address_fields = ["street", "borough", "zip"];
     if (!address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "address must contain only street, borough, and zip.";
     if (!basic_regex.test(address.street)) throw "address.street must contain only letters, numbers, commas, spaces, or hashtags.";
-    if (!boroughs.includes(address.borough.toLowerCase())) throw "address.borough must be a recognized borough in our system.";
-    if (typeof address.zip !== "number" || Number.isNaN(address.zip) || !Number.isFinite(address.zip)) throw "address.zip must be a valid zip code.";
+    address.street = xss(address.street.trim());
+    if (!boroughs.includes(address.borough.trim().toLowerCase())) throw "address.borough must be a recognized borough in our system.";
+    address.borough = xss(address.borough.trim());
+    const zipRegex = /^\d{5}(-\d{4})?$/;
+    if (typeof address.zip !== "string" || !zipRegex.test(address.zip.trim())) throw "address.zip must be a valid zip code.";
+    address.zip = xss(address.zip.trim());
 };
 
 
