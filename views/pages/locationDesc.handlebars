@@ -32,7 +32,10 @@
     </div>
 
     <div class="reviews-section">
-        <h2 class="section-title">Reviews and Comments</h2>
+        <div class="section-header">
+            <h2 class="section-title">Reviews and Comments</h2>
+            <a href="/spots/{{spot._id}}/review" class="btn btn-blue">Add Review</a>
+        </div>
         {{#each spot.reviews}}
         <div class="appeal-card">
             <div>

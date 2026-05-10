@@ -41,26 +41,35 @@
 
             <div class="form-group">
                 <label for="gender">Gender</label>
-                <input type="text" id="gender" name="gender" class="gender"
-                       pattern="male|female|non-binary|other"
-                       title="Must be: male, female, non-binary, or other"
-                       value="{{member.gender}}">
+                <select id="gender" name="gender" class="gender" data-current="{{member.gender}}">
+                    <option value="male">Male</option>
+                    <option value="female">Female</option>
+                    <option value="non-binary">Non-binary</option>
+                    <option value="other">Other</option>
+                </select>
             </div>
 
             <div class="form-group">
                 <label for="primaryLocation">Primary Location</label>
-                <input type="text" id="primaryLocation" name="primaryLocation" class="primaryLocation"
-                       pattern="the bronx|queens|manhattan|staten island|brooklyn"
-                       title="Must be one of the 5 NYC boroughs"
-                       value="{{member.primaryLocation}}">
+                <select id="primaryLocation" name="primaryLocation" class="primaryLocation" data-current="{{member.primaryLocation}}">
+                    <option value="manhattan">Manhattan</option>
+                    <option value="brooklyn">Brooklyn</option>
+                    <option value="queens">Queens</option>
+                    <option value="the bronx">The Bronx</option>
+                    <option value="staten island">Staten Island</option>
+                </select>
             </div>
 
             <div class="form-group">
                 <label for="secondaryLocation">Secondary Location (optional)</label>
-                <input type="text" id="secondaryLocation" name="secondaryLocation" class="secondaryLocation"
-                       pattern="the bronx|queens|manhattan|staten island|brooklyn"
-                       title="Must be one of the 5 NYC boroughs"
-                       value="{{member.secondaryLocation}}">
+                <select id="secondaryLocation" name="secondaryLocation" class="secondaryLocation" data-current="{{member.secondaryLocation}}">
+                    <option value="">— none —</option>
+                    <option value="manhattan">Manhattan</option>
+                    <option value="brooklyn">Brooklyn</option>
+                    <option value="queens">Queens</option>
+                    <option value="the bronx">The Bronx</option>
+                    <option value="staten island">Staten Island</option>
+                </select>
             </div>
 
             <div class="form-group">
@@ -84,3 +93,4 @@
 </div>
 
 <script src="/js/form_validate.js" defer></script>
+<script src="/js/selectPreset.js" defer></script>

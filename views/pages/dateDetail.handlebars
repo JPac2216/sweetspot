@@ -2,7 +2,18 @@
 
 <div class="page">
     <div>
-        <h1 class="page-title">{{date.title}}</h1>
+        <div class="page-header">
+            <h1 class="page-title">{{date.title}}</h1>
+            {{#if date.isCreator}}
+            <form action="/date/{{date._id}}/delete" method="POST" class="form-inline" onsubmit="return confirm('Delete this date? This cannot be undone.');">
+                <button type="submit" class="btn btn-red">Delete</button>
+            </form>
+            {{else}}{{#if isAdmin}}
+            <form action="/admin/dates/{{date._id}}/delete" method="POST" class="form-inline" onsubmit="return confirm('Delete this date? This cannot be undone.');">
+                <button type="submit" class="btn btn-red">Delete (Admin)</button>
+            </form>
+            {{/if}}{{/if}}
+        </div>
         <div class="tags">
             {{#each date.tags}}
             <span class="tag">{{this}}</span>
@@ -36,13 +47,6 @@
                 <button type="submit" class="vote-btn down">&#9660; {{date.votes.downvotes}}</button>
             </form>
         </div>
-        {{#if isAdmin}}
-        <div class="admin-actions">
-            <form action="/admin/dates/{{date._id}}/delete" method="POST" class="form-inline" onsubmit="return confirm('Delete this date? This cannot be undone.');">
-                <button type="submit" class="btn btn-red">Delete (Admin)</button>
-            </form>
-        </div>
-        {{/if}}
     </div>
 
     <div class="event-steps">
@@ -70,11 +74,7 @@
     {{#if date.isCreator}}
     <div class="add-spot">
         <h3>Add a Spot</h3>
-        <form action="/date/{{date._id}}/addSpot" method="POST">
-            <label>Spot ID: <input type="text" name="dateSpotId" required></label>
-            <label>Notes: <textarea name="notes" maxlength="250"></textarea></label>
-            <button type="submit" class="btn">Add</button>
-        </form>
+        <p class="date-meta">To add a spot to this date, visit a spot's page from <a href="/home">Home</a> and click "Add to Date".</p>
     </div>
     {{/if}}
 
@@ -93,17 +93,20 @@
                 <span class="date-meta">{{this.createdAt}}{{#if this.editedAt}} (edited {{this.editedAt}}){{/if}}</span>
             </div>
             <p>{{this.text}}</p>
-            {{#if this.canEdit}}
-            <form action="/date/{{../date._id}}/comment/{{this._id}}/edit" method="POST" class="form-inline">
-                <input type="text" name="comment" value="{{this.text}}" maxlength="250" required>
-                <button type="submit" class="btn">Save</button>
-            </form>
-            {{/if}}
-            {{#if this.canDelete}}
-            <form action="/date/{{../date._id}}/comment/{{this._id}}/delete" method="POST" class="form-inline">
-                <button type="submit" class="btn btn-red">Delete</button>
-            </form>
-            {{/if}}
+            <div class="comment-actions">
+                {{#if this.canEdit}}
+                <button type="button" class="btn" onclick="toggleEditForm(this)">Edit</button>
+                <form action="/date/{{../date._id}}/comment/{{this._id}}/edit" method="POST" class="form-inline edit-form" hidden>
+                    <input type="text" name="comment" value="{{this.text}}" maxlength="250" required>
+                    <button type="submit" class="btn">Save</button>
+                </form>
+                {{/if}}
+                {{#if this.canDelete}}
+                <form action="/date/{{../date._id}}/comment/{{this._id}}/delete" method="POST" class="form-inline">
+                    <button type="submit" class="btn btn-red">Delete</button>
+                </form>
+                {{/if}}
+            </div>
         </div>
         {{else}}
         <p>No comments yet.</p>
@@ -121,3 +124,4 @@
 </div>
 
 {{> votes}}
+{{> commentEdit}}

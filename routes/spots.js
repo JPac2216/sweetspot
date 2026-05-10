@@ -67,7 +67,7 @@ router
             tags = (tags || []).map(t => xss(t.trim().toLowerCase())).filter(Boolean);
             let cost = req.query.cost ? xss(req.query.cost.trim()) : '';
 
-            let allDates = await getAllPublicDates(tags, cost);
+            let allDates = await getAllPublicDates(tags, cost, req.session.member._id);
             allDates.forEach(d => { d._id = d._id.toString(); });
 
             return res.status(200).render('pages/explore', {

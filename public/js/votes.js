@@ -7,7 +7,8 @@
 
         let requestConfig = {
             method: 'POST',
-            url: form.attr('action')
+            url: form.attr('action'),
+            dataType: 'json'
         };
 
         $.ajax(requestConfig).then(function (responseMessage) {
