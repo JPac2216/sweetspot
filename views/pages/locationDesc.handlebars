@@ -44,10 +44,41 @@
             </div>
             <p>{{this.comment}}</p>
             <div class="date-meta">{{this.createdAt}}</div>
+            {{#if this.canDelete}}
+            <form action="/spots/{{../spot._id}}/review/{{this._id}}/delete" method="POST" class="form-inline">
+                <button type="submit" class="btn btn-red">Delete</button>
+            </form>
+            {{/if}}
         </div>
         {{else}}
         <p>No reviews yet.</p>
         {{/each}}
+
+        {{#if isLoggedIn}}
+        {{#unless hasReviewed}}
+        <form action="/spots/{{spot._id}}/review" method="POST" class="review-form">
+            <h3>Leave a Review</h3>
+            <div class="form-group">
+                <label>Rating</label>
+                <select name="rating" required>
+                    <option value="">Select...</option>
+                    <option value="1">1 star</option>
+                    <option value="2">2 stars</option>
+                    <option value="3">3 stars</option>
+                    <option value="4">4 stars</option>
+                    <option value="5">5 stars</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Review</label>
+                <textarea name="review" placeholder="Share your experience..." maxlength="500" required></textarea>
+            </div>
+            <button type="submit" class="btn btn-blue">Post Review</button>
+        </form>
+        {{/unless}}
+        {{else}}
+        <p><a href="/signin">Log in</a> to leave a review.</p>
+        {{/if}}
     </div>
 </div>
 
