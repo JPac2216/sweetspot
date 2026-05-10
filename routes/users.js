@@ -24,8 +24,8 @@ router
             const user = await getUserById(req.session.member._id);
             const createdDates = await dateData.getDatesByCreator(req.session.member._id);
             const favoriteDates = await showAllFavorites(req.session.member._id);
-            const publicDates = createdDates.filter(d => d.isPublic);
-            const privateDates = createdDates.filter(d => !d.isPublic);
+            const publicDates = createdDates.filter(d => d.visibility === "public");
+            const privateDates = createdDates.filter(d => d.visibility === "private");
             return res.status(200).render('pages/userProfile', {
                 title: 'Profile',
                 user,
@@ -123,7 +123,7 @@ router
 
 router
     .route('/logout')
-    .get(async (req, res) => {
+    .post(async (req, res) => {
         req.session.destroy();
         return res.redirect('/signin');
     });

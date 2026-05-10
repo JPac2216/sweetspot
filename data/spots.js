@@ -33,7 +33,7 @@ export const createSpot = async (name, description, address) => {
         name: xss(name.trim()),
         description: xss(description.trim()),
         address,
-        sweetspotRating: { average: null, count: 0 },
+        sweetspotRating: { average: null, count: 0, sum: 0 },
         reviews: []
     };
 
@@ -164,8 +164,14 @@ export const addReview = async (
             $set: {
                 "sweetspotRating.count": { $add: ["$sweetspotRating.count", 1]},
                 "sweetspotRating.sum": { $add: ["$sweetspotRating.sum", rating]},
-                reviews: { 
-                    $concatArrays: ["$reviews", 
+            }
+        },
+        {
+            $set: {
+                "sweetspotRating.average": {
+                    $divide: ["$sweetspotRating.sum", "$sweetspotRating.count"]
+                },
+                reviews: { $concatArrays: ["$reviews", 
                     [{
                         _id: new ObjectId(),
                         userId: new ObjectId(userId),
@@ -219,10 +225,13 @@ export const deleteReview = async (
 };
 
 export const getAllSpots = async (
-    filter
+    borough
 ) => {
+    if (!borough || typeof borough !== "string") throw "getAllSpots: borough parameter must be supplied.";
+    if (!helper.boroughs.includes(xss(borough.trim().toLowerCase()))) throw "getAllSpots: borough must be a recognized borough.";
+
     const spotsCollection = await spots();
-    const allSpotsFiltered = await spotsCollection.find(filter).toArray();
+    const allSpotsFiltered = await spotsCollection.find({ address: { borough } }).toArray();
 
     if (!allSpotsFiltered) throw "getAllSpots: couldn't retrieve any spots that match with the filter supplied.";
     for (let spot of allSpotsFiltered) {

@@ -1,1 +1,2 @@
 # SweetSpot
+Welcome to SweetSpot! SweetSpot is a web application that helps users find fun date spots based on their interests. Users will submit a survey that gauges the type of date they are looking for (ambience, occasion, time, mood, etc.) in NYC. Users can select multiple spots and put together an organized plan. Users have the option to publish and rate their date for other users’ inspiration. There will be a point system that encourages users to go on dates more frequently and log them.

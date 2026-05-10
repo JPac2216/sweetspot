@@ -12,16 +12,19 @@
         let requestConfig = {
             method: 'POST',
             url: isFavorited
-                ? '/user/date/' + dateId + '/unfavorite'
-                : '/user/date/' + dateId + '/favorite'
+                ? '/date/' + dateId + '/unfavorite'
+                : '/date/' + dateId + '/favorite'
         };
 
         $.ajax(requestConfig).then(function (responseMessage) {
             console.log(responseMessage);
-            btn.toggleClass('active');
+            btn.toggleClass('active').catch(function (xhr) {
+                console.log('Favorite toggle failed:', xhr.status, xhr.statusText, xhr.responseText);
+                alert('Could not save favorite. ' + (xhr.status === 403 ? 'Please sign in first.' : 'Please try again.'));
+            });
             form.attr('action', isFavorited
-                ? '/user/date/' + dateId + '/favorite'
-                : '/user/date/' + dateId + '/unfavorite'
+                ? '/date/' + dateId + '/favorite'
+                : '/date/' + dateId + '/unfavorite'
             );
         });
     });

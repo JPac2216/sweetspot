@@ -44,7 +44,7 @@ router
 
         try{
             let newSpot = await createSpot(name.trim(), description.trim(), address);
-            return res.redirect(`/spot/${newSpot._id}`);
+            return res.redirect(`/spots/${newSpot._id}`);
         }catch(e){
             return res.status(400).render('pages/spotCreate', {title: 'Create Spot', error: e});
         }
@@ -101,7 +101,7 @@ router
         
         try{
             await appealSpot(req.session.member._id.toString(), name.trim(), description.trim(), address); 
-            return res.redirect('/spots');
+            return res.redirect('/spots/explore');
         }catch(e){
             return res.status(400).render('appealSpotCreate', {title: 'Create Spot', error: e});
         }
@@ -127,7 +127,7 @@ router
         }
         try{
             await deleteReview(req.session.member._id.toString(), spotId, reviewId);
-            return res.redirect(`/spot/${spotId}`);
+            return res.redirect(`/spots/${spotId}`);
         }catch(e){
             return res.status(400).render('error', { title: 'Error', error: e });
         }
@@ -137,6 +137,7 @@ router
   .route('/:spotId/review')
   .get(async (req, res) => {
         //code here for GET
+        if (!req.session.member) return res.status(403).render('signin', {title: 'Sign In'});
         try{
             req.params.spotId = helpers.checkObjectID(xss(req.params.spotId));
         }catch (e){
@@ -177,7 +178,7 @@ router
 
         try{
             await addReview(spotId, userId, review.trim(), rating);
-            return res.redirect(`/spot/${spotId}`);
+            return res.redirect(`/spots/${spotId}`);
         }catch(e){
             try{
                 let spot = await getSpotById(spotId);
@@ -214,7 +215,7 @@ router
         } catch (e) {
             // user has no dates yet
         }
-        return res.status(200).render('pages/locationDesc', {title: 'Location Description', spot: spot, userDates: userDates});
+        return res.status(200).render('pages/locationDesc', {title: 'Location Description', spot: spot, userDates: userDates, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin" });
     });
 
 

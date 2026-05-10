@@ -44,13 +44,13 @@ router
         description = xss(description.trim());
 
         if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) return res.status(400).render('pages/dateCreate', {error: "createDate: createdBy must be a valid ObjectId.", title: "Error: Invalid Creator ID."});
-        createdBy = createdBy.trim();
+        createdBy = xss(createdBy.trim());
 
         if (typeof visibility !== "string" || (visibility.trim() !== "public" && visibility.trim() !== "private")) return res.status(400).render('pages/dateCreate', {error: "createDate: visibility must either be public or private.", title: "Error: Invalid Visiblity."});
-        visibility = visibility.trim();
+        visibility = xss(visibility.trim());
 
         if (typeof borough !== "string" || !helper.boroughs.includes(borough.trim().toLowerCase())) return res.status(400).render('pages/dateCreate', {error: "createDate: borough parameter must be a string that is a borough registered in our system.", title: "Error: Invalid Borough."});
-        borough = borough.trim().toLowerCase();
+        borough = xss(borough.trim().toLowerCase());
 
         estimatedCost = Number(estimatedCost);
         if (!Number.isFinite(estimatedCost)) return res.status(400).render('pages/dateCreate', {error: "createDate: estimatedCost parameter must be a valid, finite number.", title: "Error: Invalid Cost."});
@@ -77,7 +77,7 @@ router
         for (let tag of tags) {
             if (typeof tag !== "string" || !tag_regex.test(tag.trim())) return res.status(400).render('pages/dateCreate', {error: "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.", title: "Error: Invalid Tags."});
         }
-        tags = tags.map(t => t.trim());
+        tags = tags.map(t => xss(t.trim()));
 
         try {
             const newDate = await dataDates.createDate(title, description, createdBy, visibility, borough, estimatedCost, events, tags);
@@ -437,9 +437,12 @@ router
             });
 
             date._id = date._id.toString();
-            date.isCreator = isCreator;
-            date.isLoggedIn = sessionUserId !== null;
+            date.isCreator = !req.session.member ? false : req.session.member._id === date.createBy.toString();
+            date.isLoggedIn = !(!req.session.member);
             date.isPublic = date.visibility === "public";
+            date.comments.forEach(c => {
+                c.canEdit = c.canDelete = !req.session.member ? false : req.session.member._id === c.userId.toString();
+            });
 
             return res.status(200).render('pages/dateDetail', {title: date.title, date, isAdmin: req.session.member?.membershipLevel === 'admin'});
         } catch (e) {

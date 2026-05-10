@@ -67,6 +67,38 @@ router
         }
     });
 
+router
+    .route('/spots/:id/edit')
+    .get(async (req, res) => {
+        try {
+            const spotId = req.params.id;
+            if (!ObjectId.isValid(spotId.trim())) throw "spotId is not a valid ObjectId.";
+            const spot = await spotData.getSpotById(spotId.trim());
+            return res.status(200).render('adminSpotEdit', { title: "Edit Spot", spot });
+        } catch (e) {
+            return res.status(400).render('error', { title: "Error", error: e });
+        }
+    })
+    .post(async (req, res) => {
+        try {
+            const spotId = req.params.id;
+            if (!ObjectId.isValid(spotId.trim())) throw "spotId is not a valid ObjectId.";
+
+            const { name, description, street, borough, zip } = req.body;
+            const address = (street || borough || zip) ? { street: xss(street), borough: xss(borough), zip: xss(zip) } : undefined;
+
+            await adminData.editSpot(
+                spotId.trim(),
+                name ? xss(name) : undefined,
+                description ? xss(description) : undefined,
+                address
+            );
+            return res.redirect(`/spots/${spotId.trim()}`);
+        } catch (e) {
+            return res.status(400).render('error', { title: "Error", error: e });
+        }
+    });
+
 
 
 export default router;
