@@ -162,8 +162,8 @@ export const addReview = async (
         { _id: new ObjectId(spotId)}, 
         [{
             $set: {
-                "sweetspotRating.count": { $add: ["$sweetspotRating.count", 1]},
-                "sweetspotRating.sum": { $add: ["$sweetspotRating.sum", rating]},
+                "sweetspotRating.count": { $add: [{ $ifNull: ["$sweetspotRating.count", 0] }, 1]},
+                "sweetspotRating.sum": { $add: [{ $ifNull: ["$sweetspotRating.sum", 0] }, rating]},
             }
         },
         {
@@ -171,7 +171,7 @@ export const addReview = async (
                 "sweetspotRating.average": {
                     $divide: ["$sweetspotRating.sum", "$sweetspotRating.count"]
                 },
-                reviews: { $concatArrays: ["$reviews", 
+                reviews: { $concatArrays: [{ $ifNull: ["$reviews", []] },
                     [{
                         _id: new ObjectId(),
                         userId: new ObjectId(userId),
