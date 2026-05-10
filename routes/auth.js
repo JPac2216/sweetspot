@@ -9,7 +9,7 @@ router
   .route('/')
   .get(async (req, res) => {
     //code here for GET
-    res.status(200).render('signin', {title: 'Sign In'});
+    res.status(200).render('landing', {title: 'Sweet Spot'});
     });
 
 
