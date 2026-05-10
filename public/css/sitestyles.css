@@ -529,6 +529,7 @@ textarea { resize: vertical; min-height: 80px; }
 .flagged-card:hover { border-color: #ff6666; }
 
 .form-inline { display: inline; }
+[hidden] { display: none; }
 
 
 /* ── Error ──────────────────────────── */

@@ -129,12 +129,6 @@
                 </form>
                 {{/if}}
             </div>
-            {{#if this.canEdit}}
-            <form action="/date/{{../date._id}}/comment/{{this._id}}/edit" method="POST" class="form-inline">
-                <input type="text" name="comment" value="{{this.text}}" maxlength="250" required>
-                <button type="submit" class="btn">Save</button>
-            </form>
-            {{/if}}
             {{#if isAdmin}}
             <form action="/date/{{../date._id}}/comment/{{this._id}}/delete" method="POST" class="form-inline">
                 <button type="submit" class="btn btn-red">Delete</button>
