@@ -36,7 +36,7 @@ export const createDate = async (
     for (let tag of tags) {
         if (typeof tag !== "string" || !tag_regex.test(tag.trim())) throw "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.";
     }
-    tags = tags.map(t => xss(t.trim()));
+    tags = tags.map(t => xss(t.trim().toLowerCase()));
 
     const currentTime = helper.getDateTime();
     const dateObj = {
@@ -422,12 +422,23 @@ export const voteOnDate = async (
     return {voteCount: voteCount};
 }
 
-export const getAllPublicDates = async () => {
+export const getAllPublicDates = async (tags = [], cost = '') => {
     const datesCollection = await dates();
-    const findAllPublicDates = await datesCollection.find({ visibility: "public" }).toArray();
-    if (!findAllPublicDates) throw "getAllPublicDates: no public dates to show at this time...";
+    let allDates = await datesCollection.find({ visibility: "public" }).toArray();
+    if(!allDates) throw "getAllPublicDates: no public dates to show at this time";
 
-    return findAllPublicDates;
+    if(tags.length > 0){
+        allDates = allDates.filter(d =>
+            tags.some(t => d.tags.map(tag => tag.toLowerCase()).includes(t.toLowerCase()))
+        );
+    }
+
+    let costNum = parseInt(cost);
+    if (costNum === 1) allDates = allDates.filter(d => d.estimatedCost <= 30);
+    else if (costNum === 2) allDates = allDates.filter(d => d.estimatedCost > 30 && d.estimatedCost <= 75);
+    else if (costNum === 3) allDates = allDates.filter(d => d.estimatedCost > 75);
+
+    return allDates;
 }
 
 export const getDateById = async (

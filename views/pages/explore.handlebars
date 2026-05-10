@@ -1,6 +1,34 @@
 {{> navbar}}
 
 <div class="page">
+    <form id="filter-form" class="filter-bar" method="GET" action="/spots/explore">
+
+        <div class="filter-group">
+            <button type="button" class="btn filter-toggle" onclick="toggleFilter(this)">Tags</button>
+            <div class="filter-dropdown">
+                <label><input type="checkbox" name="tags" class="tags" value="outdoor" {{#if tag_outdoor}}checked{{/if}}> Outdoor</label>
+                <label><input type="checkbox" name="tags" class="tags" value="indoor" {{#if tag_indoor}}checked{{/if}}> Indoor</label>
+                <label><input type="checkbox" name="tags" class="tags" value="food" {{#if tag_food}}checked{{/if}}> Food</label>
+                <label><input type="checkbox" name="tags" class="tags" value="free" {{#if tag_free}}checked{{/if}}> Free</label>
+                <label><input type="checkbox" name="tags" class="tags" value="nightlife" {{#if tag_nightlife}}checked{{/if}}> Nightlife</label>
+                <label><input type="checkbox" name="tags" class="tags" value="romantic" {{#if tag_romantic}}checked{{/if}}> Romantic</label>
+                <label><input type="checkbox" name="tags" class="tags" value="adventure" {{#if tag_adventure}}checked{{/if}}> Adventure</label>
+            </div>
+        </div>
+
+        <div class="filter-group">
+            <button type="button" class="btn filter-toggle" onclick="toggleFilter(this)">Cost</button>
+            <div class="filter-dropdown">
+                <label><input type="radio" name="cost" class="cost" value=""> Any</label>
+                <label><input type="radio" name="cost" class="cost" value="1" {{#if cost1}}checked{{/if}}> $</label>
+                <label><input type="radio" name="cost" class="cost" value="2" {{#if cost2}}checked{{/if}}> $$</label>
+                <label><input type="radio" name="cost" class="cost" value="3" {{#if cost3}}checked{{/if}}> $$$</label>
+            </div>
+        </div>
+
+        <button id="apply-filters" type="submit" class="btn btn-filled">Apply</button>
+    </form>
+
     <div class="date-list">
         {{#each dates}}
         <div class="date-card">
@@ -34,3 +62,4 @@
 
 {{> votes}}
 {{> favorites}}
+{{> filterDropdown}}

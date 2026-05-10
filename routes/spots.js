@@ -62,8 +62,29 @@ router
         }
 
         try{
-            let allDates = await getAllPublicDates();
-            return res.status(200).render('pages/explore', {title: 'Explore', dates: allDates, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
+            let tags = req.query.tags;
+            if (tags && !Array.isArray(tags)) tags = [tags];
+            tags = (tags || []).map(t => xss(t.trim().toLowerCase())).filter(Boolean);
+            let cost = req.query.cost ? xss(req.query.cost.trim()) : '';
+
+            let allDates = await getAllPublicDates(tags, cost);
+            allDates.forEach(d => { d._id = d._id.toString(); });
+
+            return res.status(200).render('pages/explore', {
+                title: 'Explore',
+                dates: allDates,
+                isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",
+                tag_outdoor: tags.includes('outdoor'),
+                tag_indoor: tags.includes('indoor'),
+                tag_food: tags.includes('food'),
+                tag_free: tags.includes('free'),
+                tag_nightlife: tags.includes('nightlife'),
+                tag_romantic: tags.includes('romantic'),
+                tag_adventure: tags.includes('adventure'),
+                cost1: cost === '1',
+                cost2: cost === '2',
+                cost3: cost === '3',
+            });
         }catch(e){
             return res.status(400).render('error', { title: 'Error', error: e });
         }
