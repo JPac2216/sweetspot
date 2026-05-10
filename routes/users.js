@@ -11,6 +11,11 @@ router
     .get(async (req, res) => {
         try {
             const filteredSpots = await spot.getAllSpots(req.session.member.primaryLocation);
+            for (const s of filteredSpots) {
+                if (s.sweetspotRating && typeof s.sweetspotRating.average === 'number') {
+                    s.sweetspotRating.average = Number(s.sweetspotRating.average.toFixed(2));
+                }
+            }
             return res.status(200).render('pages/userHome', { title: "Homepage", spots: filteredSpots, member: req.session.member, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin" });
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
