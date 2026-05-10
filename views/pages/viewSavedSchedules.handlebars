@@ -1,0 +1,16 @@
+{{> navbar}}
+
+<div class="page">
+    <h1>My Saved Schedules</h1>
+    {{#if userSchedules.length}}
+        {{#each userSchedules}}
+        <div class="card">
+            <a href="/date/{{this}}">View Schedule</a>
+        </div>
+        {{else}}
+        <p>No saved schedules yet.</p>
+        {{/each}}
+    {{else}}
+        <p>No saved schedules yet. Visit a spot and add it to a date to start saving.</p>
+    {{/if}}
+</div>

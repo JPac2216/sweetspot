@@ -13,17 +13,17 @@ router
         //code here for GET
         //check if the user is admin
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
         if (req.session.member.membershipLevel !== 'admin') {
             return res.status(403).render('pages/userHome', {title: 'User Home'}); 
         }
-        return res.status(200).render('pages/spotCreate', {title: 'Create Spot'});
+        return res.status(200).render('pages/spotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot'});
     })
     .post(async (req, res) => {
         //code here for POST
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
         if (req.session.member.membershipLevel !== 'admin') {
             return res.status(403).render('pages/userHome', {title: 'User Home'}); 
@@ -39,14 +39,14 @@ router
         try{
             helpers.validateSpotFields(name, description, address);
         }catch(e){
-            return res.status(400).render('pages/spotCreate', {title: 'Create Spot', error: e});
+            return res.status(400).render('pages/spotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});
         }
 
         try{
             let newSpot = await createSpot(name.trim(), description.trim(), address);
             return res.redirect(`/spots/${newSpot._id}`);
         }catch(e){
-            return res.status(400).render('pages/spotCreate', {title: 'Create Spot', error: e});
+            return res.status(400).render('pages/spotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});
         }
 
     });
@@ -58,12 +58,12 @@ router
         //code here for GET
         //check if the user is logged in
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
 
         try{
             let allDates = await getAllPublicDates();
-            return res.status(200).render('pages/explore', {title: 'Explore', dates: allDates});
+            return res.status(200).render('pages/explore', {title: 'Explore', dates: allDates, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         }catch(e){
             return res.status(400).render('error', { title: 'Error', error: e });
         }
@@ -75,14 +75,14 @@ router
         //code here for GET
         //check if the user is logged in
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
-        return res.status(200).render('appealSpotCreate', {title: 'Create Spot'});
+        return res.status(200).render('appealSpotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot'});
     })
     .post(async (req, res) => {
         //code here for POST
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
 
         let description = xss(req.body.description);
@@ -96,14 +96,14 @@ router
         try{
             helpers.validateSpotFields(name, description, address);
         }catch(e){
-            return res.status(400).render('appealSpotCreate', {title: 'Create Spot', error: e});
+            return res.status(400).render('appealSpotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});
         }
         
         try{
-            await appealSpot(req.session.member._id.toString(), name.trim(), description.trim(), address); 
-            return res.redirect('/spots/explore');
+            await appealSpot(req.session.member._id.toString(), name.trim(), description.trim(), address);
+            return res.redirect('/home');
         }catch(e){
-            return res.status(400).render('appealSpotCreate', {title: 'Create Spot', error: e});
+            return res.status(400).render('appealSpotCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create Spot', error: e});
         }
 
     });
@@ -114,7 +114,7 @@ router
   .route('/:spotId/review/:reviewId/delete')
   .post(async (req, res) => {
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
 
         let spotId;
@@ -137,7 +137,7 @@ router
   .route('/:spotId/review')
   .get(async (req, res) => {
         //code here for GET
-        if (!req.session.member) return res.status(403).render('signin', {title: 'Sign In'});
+        if (!req.session.member) return res.redirect('/signin');
         try{
             req.params.spotId = helpers.checkObjectID(xss(req.params.spotId));
         }catch (e){
@@ -145,7 +145,7 @@ router
         }
         try{
             let spot = await getSpotById(req.params.spotId);
-            return res.status(200).render('addReview', {title: 'Add Review', spot: spot}); 
+            return res.status(200).render('addReview', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Add Review', spot: spot}); 
         }catch(e){
             return res.status(404).render('pages/userHome', { title: 'Error', error: 'Spot not found.'}); //again what should we render here?
         }
@@ -153,7 +153,7 @@ router
   .post(async (req, res) => {
         //code here for POST
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
 
         let spotId;
@@ -170,7 +170,7 @@ router
         }catch(e){
             try{
                 let spot = await getSpotById(spotId);
-                return res.status(400).render('addReview', {title: 'Add Review', spot: spot, error: e});
+                return res.status(400).render('addReview', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Add Review', spot: spot, error: e});
             }catch(e){
                 return res.status(404).render('error', {title: 'Error', error: e});
             }
@@ -182,7 +182,7 @@ router
         }catch(e){
             try{
                 let spot = await getSpotById(spotId);
-                return res.status(400).render('addReview', {title: 'Add Review', spot: spot, error: e});
+                return res.status(400).render('addReview', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Add Review', spot: spot, error: e});
             }catch(e){
                 return res.status(404).render('error', {title: 'Error', error: e});
             }
@@ -194,7 +194,7 @@ router
   .get(async (req, res) => {
         //code here for GET
         if (!req.session.member) {
-            return res.status(403).render('signin', {title: 'Sign In'});
+            return res.redirect('/signin');
         }
         try {
             req.params.spotId = helpers.checkObjectID(xss(req.params.spotId));

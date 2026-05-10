@@ -137,10 +137,8 @@ export const validateUser = async (
         const usernameQuery = isUpdating && currentUserId
             ? { username, _id: { $ne: new ObjectId(currentUserId) } }
             : { username };
-        const existingUsername = await usersCollection.findOne(usernameQuery);
-        if (existingUsername){
-            throw "A user with that username already exists in the database!";
-        }
+        const existing = await usersCollection.findOne({ username: username.toLowerCase() });
+        if (existing && (!isUpdating || !currentUserId || existing._id.toString() !== currentUserId)) throw 'A user with that username already exists in the database!';
     }
 
     if (!isUpdating || password) {
@@ -204,7 +202,7 @@ export const validateSpotFields = (name, description, address) => {
     if (!address_fields.every(field => Object.hasOwn(address, field)) || Object.keys(address).length !== address_fields.length) throw "address must contain only street, borough, and zip.";
     if (!basic_regex.test(address.street)) throw "address.street must contain only letters, numbers, commas, spaces, or hashtags.";
     address.street = xss(address.street.trim());
-    if (!helper.boroughs.includes(address.borough.trim().toLowerCase())) throw "address.borough must be a recognized borough in our system.";
+    if (!boroughs.includes(address.borough.trim().toLowerCase())) throw "address.borough must be a recognized borough in our system.";
     address.borough = xss(address.borough.trim());
     const zipRegex = /^\d{5}(-\d{4})?$/;
     if (typeof address.zip !== "string" || !zipRegex.test(address.zip.trim())) throw "address.zip must be a valid zip code.";

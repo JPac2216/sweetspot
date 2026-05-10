@@ -18,14 +18,14 @@
 
         $.ajax(requestConfig).then(function (responseMessage) {
             console.log(responseMessage);
-            btn.toggleClass('active').catch(function (xhr) {
-                console.log('Favorite toggle failed:', xhr.status, xhr.statusText, xhr.responseText);
-                alert('Could not save favorite. ' + (xhr.status === 403 ? 'Please sign in first.' : 'Please try again.'));
-            });
+            btn.toggleClass('active');
             form.attr('action', isFavorited
                 ? '/date/' + dateId + '/favorite'
                 : '/date/' + dateId + '/unfavorite'
             );
+        }).catch(function (xhr) {
+            console.log('Favorite toggle failed:', xhr.status, xhr.statusText, xhr.responseText);
+            alert('Could not save favorite. ' + (xhr.status === 403 ? 'Please sign in first.' : 'Please try again.'));
         });
     });
 

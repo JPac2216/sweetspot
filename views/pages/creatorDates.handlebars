@@ -1,0 +1,16 @@
+{{> navbar}}
+
+<div class="page">
+    <h1>{{creator.username}}'s Public Dates</h1>
+    <div class="grid">
+        {{#each dates}}
+        <div class="card">
+            <h2><a href="/date/{{this._id}}">{{this.title}}</a></h2>
+            <p>{{this.description}}</p>
+            <div class="date-meta">{{this.borough}}</div>
+        </div>
+        {{else}}
+        <p>{{creator.username}} hasn't created any public dates yet.</p>
+        {{/each}}
+    </div>
+</div>

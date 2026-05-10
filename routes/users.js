@@ -10,8 +10,8 @@ router
     .route('/home')
     .get(async (req, res) => {
         try {
-            const filteredSpots = await spot.getAllSpots({ address: {borough: req.session.member.primaryLocation} });
-            return res.status(200).render('pages/userHome', { title: "Homepage", filteredSpots, member: req.session.member });
+            const filteredSpots = await spot.getAllSpots(req.session.member.primaryLocation);
+            return res.status(200).render('pages/userHome', { title: "Homepage", spots: filteredSpots, member: req.session.member, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin" });
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
         }
@@ -31,7 +31,8 @@ router
                 user,
                 publicDates,
                 privateDates,
-                favoriteDates
+                favoriteDates,
+                isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"
             });
         } catch (e) {
             return res.status(500).render('error', { title: 'Error', error: e });
@@ -43,7 +44,7 @@ router
     .route('/profile/edit')
     .get(async (req, res) => {
         try {
-            return res.status(200).render('pages/userEdit')
+            return res.status(200).render('pages/userEdit', {title: 'Edit Profile', member: req.session.member, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         } catch (e) {
             return res.status(500).render('error', { title: 'Error', error: e });
         }
@@ -67,6 +68,7 @@ router
             return res.status(400).render('pages/userEdit', {
                 title: 'Edit Profile',
                 member: req.session.member,
+                isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",
                 error: 'Current password is required to save changes.'
             });
         }
@@ -85,6 +87,7 @@ router
             return res.status(400).render('pages/userEdit', {
                 title: 'Edit Profile',
                 member: req.session.member,
+                isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",
                 error: 'No fields provided to update.'
             });
         }
@@ -98,6 +101,7 @@ router
             return res.status(400).render('pages/userEdit', {
                 title: 'Edit Profile',
                 member: req.session.member,
+                isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",
                 error: e
             });
         }
@@ -129,9 +133,12 @@ router
 
 router
     .route('/logout')
-    .post(async (req, res) => {
-        req.session.destroy();
-        return res.redirect('/signin');
+    .get(async (req, res) => {
+        req.session.destroy((err) => {
+            if (err) return res.status(500).render('error', {title: 'Error', error: 'Could not log out.'});
+            res.clearCookie('UserAuthState');
+            return res.redirect('/signin');
+        });
     });
 
 

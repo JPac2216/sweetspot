@@ -227,19 +227,20 @@ export const deleteReview = async (
 export const getAllSpots = async (
     borough
 ) => {
-    if (!borough || typeof borough !== "string") throw "getAllSpots: borough parameter must be supplied.";
-    if (!helper.boroughs.includes(xss(borough.trim().toLowerCase()))) throw "getAllSpots: borough must be a recognized borough.";
-
-    const spotsCollection = await spots();
-    const allSpotsFiltered = await spotsCollection.find({ address: { borough } }).toArray();
-
-    if (!allSpotsFiltered) throw "getAllSpots: couldn't retrieve any spots that match with the filter supplied.";
-    for (let spot of allSpotsFiltered) {
-        spot._id = spot._id.toString();
+    const query = {};
+    if (typeof borough === 'string' && borough.trim()) {
+        if (!helper.boroughs.includes(borough.trim().toLowerCase())) {
+            throw "getAllSpots: borough must be a recognized borough.";
+        }
+        query['address.borough'] = borough.trim();
     }
-
-    return allSpotsFiltered;
+    const spotsCollection = await spots();
+    const allSpots = await spotsCollection.find(query).toArray();
+    for (const spot of allSpots) spot._id = spot._id.toString();
+    return allSpots;
 };
+
+
 
 export const getSpotById = async (
     spotId

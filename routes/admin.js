@@ -14,8 +14,9 @@ router
         try {
             const appeals = await spotData.getAllPendingAppeals();
             const flaggedDates = [];
-            return res.status(200).render('adminDashboard', { title: "Admin Dashboard", appeals, flaggedDates});
+            return res.status(200).render('pages/adminDashboard', { title: "Admin Dashboard", appeals, flaggedDates, isAdmin: true});
         } catch (e) {
+            console.log(e);
             return res.status(500).render('error', { title: "Error", error: e });
         }
     });
@@ -74,7 +75,7 @@ router
             const spotId = req.params.id;
             if (!ObjectId.isValid(spotId.trim())) throw "spotId is not a valid ObjectId.";
             const spot = await spotData.getSpotById(spotId.trim());
-            return res.status(200).render('adminSpotEdit', { title: "Edit Spot", spot });
+            return res.status(200).render('pages/adminSpotEdit', { title: "Edit Spot", spot, isAdmin: true });
         } catch (e) {
             return res.status(400).render('error', { title: "Error", error: e });
         }

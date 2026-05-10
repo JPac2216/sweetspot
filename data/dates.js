@@ -16,7 +16,7 @@ export const createDate = async (
     events,
     tags
 ) => {
-    if (title === undefined || description === undefined || createdBy === undefined || visibility === undefined || borough === undefined || estimatedCost === undefined || events === undefined || tags === undefined || datepointCost === undefined) throw "createDate: all parameters must be supplied in order to create the date.";
+    if (title === undefined || description === undefined || createdBy === undefined || visibility === undefined || borough === undefined || estimatedCost === undefined || events === undefined || tags === undefined) throw "createDate: all parameters must be supplied in order to create the date.";
     if (typeof title !== "string" || !title.trim()) throw "createDate: title must be supplied and must not be a string of empty spaces.";
     title = xss(title.trim());
     if (typeof description !== "string" || !description.trim()) throw "createDate: description must be supplied and must not be a string of empty spaces.";
@@ -59,6 +59,92 @@ export const createDate = async (
     const datesCollection = await dates();
     const success = await datesCollection.insertOne(dateObj);
     if (!success.acknowledged || !success.insertedId) throw "createDate: couldn't insert the date into the database.";
+
+    dateObj._id = dateObj._id.toString();
+    dateObj.createdBy = dateObj.createdBy.toString();
+    return dateObj;
+};
+
+
+export const saveDraft = async (
+    createdBy,
+    title,
+    description,
+    borough,
+    estimatedCost,
+    events,
+    tags
+) => {
+    if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) throw "saveDraft: createdBy must be a valid ObjectId.";
+    createdBy = createdBy.trim();
+
+    if (typeof title === "string" && title.trim()) {
+        title = xss(title.trim());
+    } else {
+        title = "Untitled Draft";
+    }
+    if (typeof description === "string" && description.trim()) {
+        description = xss(description.trim());
+    } else {
+        description = "(draft - no description yet)";
+    }
+
+    if (typeof borough === "string" && helper.boroughs.includes(borough.trim().toLowerCase())) {
+        borough = xss(borough.trim().toLowerCase());
+    } else {
+        borough = "manhattan";
+    }
+
+    estimatedCost = Number(estimatedCost);
+    if (!Number.isFinite(estimatedCost)) estimatedCost = 0;
+
+    if (!Array.isArray(events)) events = [];
+    let cleanedEvents = [];
+    for (let i = 0; i < events.length; i++) {
+        let ev = events[i];
+        let notes = "";
+        if (typeof ev.notes === "string") notes = xss(ev.notes.trim());
+        cleanedEvents.push({
+            order: ev.order,
+            spotId: ev.spotId,
+            spotName: ev.spotName,
+            notes: notes
+        });
+    }
+    events = cleanedEvents;
+
+    if (!Array.isArray(tags)) tags = [];
+    const tag_regex = /^[a-zA-Z]{2,20}$/;
+    let cleanedTags = [];
+    for (let i = 0; i < tags.length; i++) {
+        if (typeof tags[i] === "string" && tag_regex.test(tags[i].trim())) {
+            cleanedTags.push(xss(tags[i].trim()));
+        }
+    }
+    if (!cleanedTags.includes("Draft")) cleanedTags.push("Draft");
+    tags = cleanedTags;
+
+    const currentTime = helper.getDateTime();
+    const dateObj = {
+        _id: new ObjectId(),
+        title,
+        description,
+        createdBy: new ObjectId(createdBy),
+        visibility: "private",
+        borough,
+        estimatedCost,
+        events,
+        tags,
+        votes: [],
+        voteCount: 0,
+        comments: [],
+        createdAt: currentTime,
+        updatedAt: currentTime
+    };
+
+    const datesCollection = await dates();
+    const success = await datesCollection.insertOne(dateObj);
+    if (!success.acknowledged || !success.insertedId) throw "saveDraft: couldn't insert the draft into the database.";
 
     dateObj._id = dateObj._id.toString();
     dateObj.createdBy = dateObj.createdBy.toString();

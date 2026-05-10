@@ -13,7 +13,7 @@ router
     .get(async (req, res) => {
         try {
             const savedSchedules = req.session.member.savedSchedules;
-            return res.status(200).render('viewSavedSchedules', {title: "My Saved Schedules", userSchedules: savedSchedules});
+            return res.status(200).render('pages/viewSavedSchedules', {title: "My Saved Schedules", userSchedules: savedSchedules, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
         }
@@ -22,7 +22,7 @@ router
 router
     .route('/create')
     .get(async (req, res) => {
-        res.status(200).render('pages/dateCreate', {title: 'Create a Schedule'})
+        res.status(200).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",title: 'Create a Schedule'})
     })
     .post(async (req, res) => {
         let title = req.body.title;
@@ -34,35 +34,61 @@ router
         let events = req.body.events;
         let tags = req.body.tags;
 
-        // Validation
-        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !events || !tags || !datepointCost) return res.status(400).render('pages/dateCreate', {error: "createDate: all parameters must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
+        if (req.body.action === "save") {
+            if (typeof events === "string") {
+                try { 
+                    events = JSON.parse(events); 
+                } catch (e) { 
+                    events = []; 
+                }
+            }
+            if (!Array.isArray(events)) events = [];
 
-        if (typeof title !== "string" || !title.trim()) return res.status(400).render('pages/dateCreate', {error: "createDate: title must be supplied and must not be a string of empty spaces.", title: "Error: Invalid Title."});
+            if (typeof tags === "string") {
+                try { 
+                    tags = JSON.parse(tags); 
+                } catch (e) { 
+                    tags = [tags]; 
+                }
+            }
+            if (!Array.isArray(tags)) tags = [];
+
+            try {
+                const draft = await dataDates.saveDraft(createdBy, title, description, borough, estimatedCost, events, tags);
+                return res.redirect(`/date/${draft._id}`);
+            } catch (e) {
+                return res.status(500).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin", error: e, title: "Error: Could Not Save Draft."});
+            }
+        }
+
+        if (!title || !description || !createdBy || !visibility || !borough || !estimatedCost || !events || !tags) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: all parameters must be supplied in order to create the date.", title: 'Error: Missing Arguments.'});
+
+        if (typeof title !== "string" || !title.trim()) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: title must be supplied and must not be a string of empty spaces.", title: "Error: Invalid Title."});
         title = xss(title.trim());
 
-        if (typeof description !== "string" || !description.trim()) return res.status(400).render('pages/dateCreate', {error: "createDate: description must be supplied and must not be a string of empty spaces."});
+        if (typeof description !== "string" || !description.trim()) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: description must be supplied and must not be a string of empty spaces."});
         description = xss(description.trim());
 
-        if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) return res.status(400).render('pages/dateCreate', {error: "createDate: createdBy must be a valid ObjectId.", title: "Error: Invalid Creator ID."});
+        if (typeof createdBy !== "string" || !ObjectId.isValid(createdBy.trim())) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: createdBy must be a valid ObjectId.", title: "Error: Invalid Creator ID."});
         createdBy = xss(createdBy.trim());
 
-        if (typeof visibility !== "string" || (visibility.trim() !== "public" && visibility.trim() !== "private")) return res.status(400).render('pages/dateCreate', {error: "createDate: visibility must either be public or private.", title: "Error: Invalid Visiblity."});
+        if (typeof visibility !== "string" || (visibility.trim() !== "public" && visibility.trim() !== "private")) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: visibility must either be public or private.", title: "Error: Invalid Visiblity."});
         visibility = xss(visibility.trim());
 
-        if (typeof borough !== "string" || !helper.boroughs.includes(borough.trim().toLowerCase())) return res.status(400).render('pages/dateCreate', {error: "createDate: borough parameter must be a string that is a borough registered in our system.", title: "Error: Invalid Borough."});
+        if (typeof borough !== "string" || !helper.boroughs.includes(borough.trim().toLowerCase())) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: borough parameter must be a string that is a borough registered in our system.", title: "Error: Invalid Borough."});
         borough = xss(borough.trim().toLowerCase());
 
         estimatedCost = Number(estimatedCost);
-        if (!Number.isFinite(estimatedCost)) return res.status(400).render('pages/dateCreate', {error: "createDate: estimatedCost parameter must be a valid, finite number.", title: "Error: Invalid Cost."});
+        if (!Number.isFinite(estimatedCost)) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: estimatedCost parameter must be a valid, finite number.", title: "Error: Invalid Cost."});
 
         if (typeof events === "string") {
             try { events = JSON.parse(events); }
-            catch (e) { return res.status(400).render('pages/dateCreate', {error: "createDate: events must be valid JSON.", title: "Error: Invalid Events."}); }
+            catch (e) { return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events must be valid JSON.", title: "Error: Invalid Events."}); }
         }
-        if (!Array.isArray(events) || events.length === 0) return res.status(400).render('pages/dateCreate', {error: "createDate: events list must be a list that has at least one event in it.", title: "Error: Invalid Events."});
+        if (!Array.isArray(events) || events.length === 0) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events list must be a list that has at least one event in it.", title: "Error: Invalid Events."});
 
         const validEvents = await helper.isValidEventList(events);
-        if (!validEvents) return res.status(400).render('pages/dateCreate', {error: "createDate: events list must contain valid events.", title: "Error: Invalid Events."});
+        if (!validEvents) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: events list must contain valid events.", title: "Error: Invalid Events."});
 
         events = events.map(ev => ({
             ...ev,
@@ -72,10 +98,10 @@ router
         if (typeof tags === "string") {
             try { tags = JSON.parse(tags); } catch (e) { tags = [tags]; }
         }
-        if (!Array.isArray(tags) || tags.length === 0) return res.status(400).render('pages/dateCreate', {error: "createDate: tags must be a non-empty list.", title: "Error: Invalid Tags."});
+        if (!Array.isArray(tags) || tags.length === 0) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: tags must be a non-empty list.", title: "Error: Invalid Tags."});
         const tag_regex = /^[a-zA-Z]{2,20}$/;
         for (let tag of tags) {
-            if (typeof tag !== "string" || !tag_regex.test(tag.trim())) return res.status(400).render('pages/dateCreate', {error: "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.", title: "Error: Invalid Tags."});
+            if (typeof tag !== "string" || !tag_regex.test(tag.trim())) return res.status(400).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: "createDate: tags list must contain tags that are 2 to 20 characters in length and only consist of characters.", title: "Error: Invalid Tags."});
         }
         tags = tags.map(t => xss(t.trim()));
 
@@ -83,7 +109,7 @@ router
             const newDate = await dataDates.createDate(title, description, createdBy, visibility, borough, estimatedCost, events, tags);
             return res.redirect(`/date/${newDate._id}`);
         } catch (e) {
-            return res.status(500).render('pages/dateCreate', {error: e, title: "Error: Could Not Create Date."});
+            return res.status(500).render('pages/dateCreate', {isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin",error: e, title: "Error: Could Not Create Date."});
         }
     });
 
@@ -97,7 +123,7 @@ router
         dateId = dateId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -126,7 +152,7 @@ router
         dateId = dateId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -154,7 +180,7 @@ router
         dateId = dateId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -193,7 +219,7 @@ router
         commentId = commentId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -215,7 +241,7 @@ router
         dateId = dateId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
 
         let dateSpotId = req.body.dateSpotId;
@@ -249,7 +275,7 @@ router
         dateId = dateId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -276,7 +302,7 @@ router
         dateId = dateId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -299,7 +325,7 @@ router
         try {
             const datesList = await dataDates.getAllPublicDates();
             datesList.forEach(d => { d._id = d._id.toString(); });
-            return res.status(200).render('pages/explore', {title: 'Explore', dates: datesList});
+            return res.status(200).render('pages/explore', {title: 'Explore', dates: datesList, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
         }
@@ -320,7 +346,7 @@ router
 
             const creator = await dataUsers.getUserById(userId);
 
-            return res.status(200).render('creatorDates', {title: `${creator.username}'s Dates`, dates: datesList, creator: {username: creator.username, _id: userId}});
+            return res.status(200).render('pages/creatorDates', {title: `${creator.username}'s Dates`, dates: datesList, creator: {username: creator.username, _id: userId}, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         } catch (e) {
             return res.status(404).render('error', {title: 'Error: Creator Not Found', error: e});
         }
@@ -343,7 +369,7 @@ router
         commentId = commentId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -382,7 +408,7 @@ router
         dateSpotId = dateSpotId.trim();
 
         if (!req.session.member || !req.session.member._id) {
-            return res.status(403).redirect('/login');
+            return res.status(403).redirect('/signin');
         }
         const userId = req.session.member._id;
 
@@ -437,14 +463,11 @@ router
             });
 
             date._id = date._id.toString();
-            date.isCreator = !req.session.member ? false : req.session.member._id === date.createBy.toString();
-            date.isLoggedIn = !(!req.session.member);
+            date.isCreator = isCreator;
+            date.isLoggedIn = !!req.session.member;
             date.isPublic = date.visibility === "public";
-            date.comments.forEach(c => {
-                c.canEdit = c.canDelete = !req.session.member ? false : req.session.member._id === c.userId.toString();
-            });
 
-            return res.status(200).render('pages/dateDetail', {title: date.title, date, isAdmin: req.session.member?.membershipLevel === 'admin'});
+            return res.status(200).render('pages/dateDetail', {title: date.title, date, isAdmin: !req.session.member ? false : req.session.member.membershipLevel === "admin"});
         } catch (e) {
             return res.status(404).render('error', {title: 'Error: Date Not Found', error: e});
         }

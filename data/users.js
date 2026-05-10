@@ -17,53 +17,6 @@ export const createUser = async (
     primaryLocation,
     secondaryLocation  
 ) => {
-    //Input validation
-
-    // if (!firstName || !lastName || !email || !username || !password || !gender || !primaryLocation) throw "createUser: all fields must be supplied to create a user.";
-
-    // //Name validation: first and last name must be strings between 2 and 20 characters in length only containing letters
-    // const name_regex = /^[a-zA-Z]{2,20}$/;
-    // if (typeof firstName !== "string" || firstName.trim().length === 0 || !name_regex.test(firstName.trim())) throw "createUser: firstName parameter must be a string between 2 and 20 characters in length only containing letters.";
-    // if (typeof lastName !== "string" || lastName.trim().length === 0 || !name_regex.test(lastName.trim())) throw "createUser: lastName parameter must be a string between 2 and 20 characters in length only containing letters.";
-    // firstName = xss(firstName.trim());
-    // lastName = xss(lastName.trim());
-
-    // //Email validation: must be a valid email format and not already in the database
-    // const email_regex = /^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
-    // if (typeof email !== "string" || email.trim().length === 0 || !email_regex.test(email.trim())) throw "createUser: email parameter must be a valid email address.";
-    // email = email.trim().toLowerCase();
-    // const usersCollection = await users();
-    // const existingEmail = await usersCollection.findOne({ "email": email });
-    // if (existingEmail) throw "createUser: a user with that email already exists in the database!";
-
-    // //Username validation: 3-20 chars, letters/numbers/underscores, must be unique
-    // const username_regex = /^[a-zA-Z0-9_]{3,20}$/;
-    // if (typeof username !== "string" || username.trim().length === 0 || !username_regex.test(username.trim())) throw "createUser: username parameter must be a string between 3 and 20 characters in length only containing letters, numbers, and underscores.";
-    // username = username.trim().toLowerCase();
-    // const existingUsername = await usersCollection.findOne({ "username": username });
-    // if (existingUsername) throw "createUser: a user with that username already exists in the database!";
-
-    // //Password validation: must be at least 8 characters in length and contain at least one letter, number, and special character
-    // const password_regex = /^(?=.*[A-Z])(?=.*[0-9])(?=.*[^a-zA-Z0-9 ])[^ ]{8,}$/;
-    // if (typeof password !== "string" || password.trim().length === 0 || !password_regex.test(password.trim())) throw "createUser: password parameter must be a valid password that is at leat 8 characters in length containing at least one uppercase letter, number, and special character.";
-    // password = password.trim();
-
-    // //Gender validation: must be a string that is either male female non-binary or other
-    // const gender_regex = /^(male|female|non-binary|other)$/i; 
-    // if (typeof gender !== "string" || gender.trim().length === 0 || !gender_regex.test(gender.trim())) throw "createUser: gender parameter must be a string that is recognized by our system.";
-    // gender = gender.trim();
-
-    // //Location validation: primaryLocation must be one of the 5 boroughs of NYC, secondaryLocation can either be empty or one of the 5 boroughs but cannot be the same as primary
-    // if(typeof primaryLocation !== "string" || !helpers.boroughs.includes(primaryLocation.trim().toLowerCase())) throw "createUser: primaryLocation must be one of the 5 boroughs of NYC.";
-    // primaryLocation = primaryLocation.trim().toLowerCase();
-    // if (!secondaryLocation || secondaryLocation.trim().length === 0) {
-    //     secondaryLocation = "";
-    // } else {
-    //     if (typeof secondaryLocation !== "string" || !helpers.boroughs.includes(secondaryLocation.trim().toLowerCase())) throw "createUser: secondaryLocation must be one of the 5 boroughs of NYC.";
-    //     if (primaryLocation.toLowerCase() === secondaryLocation.trim().toLowerCase()) throw "createUser: primaryLocation and secondaryLocation cannot be the same.";
-    //     secondaryLocation = secondaryLocation.trim().toLowerCase();
-    // }
-
     const validationObj = await helpers.validateUser(firstName, lastName, email, username, password, confirmPassword, gender, primaryLocation, secondaryLocation);
 
     let userObj = {
@@ -259,7 +212,7 @@ export const updateUser = async (email, password, updateObj) => {
         {$set: updateFields},
         {returnDocument: 'after'}
     );
-    if(!updatedInfo.value) throw 'Could not update user successfully';
+    if(!updatedInfo) throw 'Could not update user successfully';
 
 
     return { "userUpdated": true };
