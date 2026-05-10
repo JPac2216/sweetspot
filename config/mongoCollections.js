@@ -18,4 +18,4 @@ export const members = getCollectionFn('members');
 export const users = getCollectionFn('users');
 export const dates = getCollectionFn('dates');
 export const spots = getCollectionFn('spots');
-export const appeals = getCollectionFn('appeals')
+export const appeals = getCollectionFn('appeals');

@@ -127,3 +127,6 @@ router
         req.session.destroy();
         return res.redirect('/signin');
     });
+
+
+export default router;

@@ -29,11 +29,11 @@ router
             return res.status(403).render('pages/userHome', {title: 'User Home'}); 
         }
         let description = xss(req.body.description);
-        let name = xss(req.body.name);
+        let name = xss(req.body.name.trim());
         let address = {
-            street: xss(req.body.street),
-            borough: xss(req.body.borough),
-            zip: parseInt(xss(req.body.zip))
+            street: xss(req.body.street.trim()),
+            borough: xss(req.body.borough.trim()),
+            zip: xss(req.body.zip.trim())
         };
 
         try{
@@ -90,7 +90,7 @@ router
         let address = {
             street: xss(req.body.street),
             borough: xss(req.body.borough),
-            zip: parseInt(xss(req.body.zip))
+            zip: xss(req.body.zip.trim())
         };
 
         try{
