@@ -88,6 +88,11 @@
     {{/if}}
 
     <div class="reviews-section">
+        <form action="/date/{{date._id}}/comment" method="POST" class="form-box">
+            <textarea name="comment" placeholder="Add a comment..." maxlength="250" required></textarea>
+            <button type="submit" class="btn btn-blue">Post Comment</button>
+        </form>
+        
         <h2 class="section-title">Comments</h2>
         {{#each date.comments}}
         <div class="appeal-card">
