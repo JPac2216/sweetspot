@@ -1,6 +1,53 @@
 {{> navbar}}
 
 <div class="page">
+
+    {{#if date.isCreator}}
+    <div class="edit-heading">Editing: {{date.title}}</div>
+    <div class="card card-edit">
+        <div class="appeal-actions">
+            {{#if date.isPublic}}
+            <form action="/date/{{date._id}}/private" method="POST" class="form-inline">
+                <button type="submit" class="btn">Make Private</button>
+            </form>
+            {{else}}
+            <form action="/date/{{date._id}}/publish" method="POST" class="form-inline">
+                <button type="submit" class="btn btn-blue">Publish</button>
+            </form>
+            {{/if}}
+        </div>
+
+        <h3 class="section-title">Spots</h3>
+        <p>Visit a spot's page to add it to this date. Use arrows to reorder. Changes save when you click Save.</p>
+
+        <form id="reorder-form" action="/date/{{date._id}}/reorder" method="POST">
+            <div class="event-steps" id="editSpotList">
+                {{#each date.events}}
+                <div class="event-step">
+                    <div class="event-card">
+                        <input type="hidden" class="spot-id-input" name="events[{{@index}}][spotId]" value="{{this.spotId}}">
+                        <div class="card-move-controls">
+                            <button type="button" class="btn-move-left vote-btn" onclick="moveCard(this,-1)" title="Move left">&#8678;</button>
+                            <button type="button" class="btn-move-right vote-btn" onclick="moveCard(this,1)" title="Move right">&#8680;</button>
+                            <button type="button" class="btn btn-red btn-sm" onclick="removeCard(this)" title="Remove">&#x2715;</button>
+                        </div>
+                        <strong>{{this.spotName}}</strong>
+                        <a href="/spots/{{this.spotId}}" class="tag">View Spot</a>
+                        <textarea class="spot-notes-input" name="events[{{@index}}][notes]" maxlength="250" placeholder="Notes...">{{this.notes}}</textarea>
+                    </div>
+                </div>
+                {{#unless @last}}<span class="step-arrow">&#8594;</span>{{/unless}}
+                {{else}}
+                <p>No spots added yet — visit a spot's page to add one.</p>
+                {{/each}}
+            </div>
+            <div class="form-actions">
+                <button type="submit" class="btn btn-blue">Save Changes</button>
+            </div>
+        </form>
+    </div>
+    {{/if}}
+
     <div>
         <div class="page-header">
             <h1 class="page-title">{{date.title}}</h1>
@@ -25,20 +72,6 @@
         </div>
         <div class="date-meta">{{date.createdAt}}</div>
 
-        {{#if date.isCreator}}
-        <div class="creator-controls">
-            {{#if date.isPublic}}
-            <form action="/date/{{date._id}}/private" method="POST" class="form-inline">
-                <button type="submit" class="btn">Make Private</button>
-            </form>
-            {{else}}
-            <form action="/date/{{date._id}}/publish" method="POST" class="form-inline">
-                <button type="submit" class="btn">Publish</button>
-            </form>
-            {{/if}}
-        </div>
-        {{/if}}
-
         <div class="vote-row">
             <form id="upvote-form-{{date._id}}" action="/date/{{date._id}}/upvote" method="POST" class="form-inline">
                 <button type="submit" class="vote-btn up">&#9650; {{date.votes.upvotes}}</button>
@@ -54,20 +87,15 @@
         <div class="event-step">
             <div class="event-card">
                 <strong>{{this.spotName}}</strong>
-                <a href="/spots/{{this.spotId}}" class="tag">View Spot </a>
+                <a href="/spots/{{this.spotId}}" class="tag">View Spot</a>
                 {{#if this.notes}}
                 <p>{{this.notes}}</p>
-                {{/if}}
-                {{#if ../date.isCreator}}
-                <form action="/date/{{../date._id}}/spot/{{this._id}}/delete" method="POST" class="form-inline">
-                    <button type="submit" class="btn btn-red">Remove</button>
-                </form>
                 {{/if}}
             </div>
         </div>
         {{#unless @last}}<span class="step-arrow">&#8594;</span>{{/unless}}
         {{else}}
-        <p>No events added yet.</p>
+        <p>No spots added yet.</p>
         {{/each}}
     </div>
 
@@ -79,12 +107,6 @@
     {{/if}}
 
     <div class="reviews-section">
-<!--
-        <form action="/date/{{date._id}}/comment" method="POST" class="form-box">
-            <textarea name="comment" placeholder="Add a comment..." maxlength="250" required></textarea>
-            <button type="submit" class="btn btn-blue">Post Comment</button>
-        </form>
--->    
         <h2 class="section-title">Comments</h2>
         {{#each date.comments}}
         <div class="appeal-card">
@@ -107,6 +129,17 @@
                 </form>
                 {{/if}}
             </div>
+            {{#if this.canEdit}}
+            <form action="/date/{{../date._id}}/comment/{{this._id}}/edit" method="POST" class="form-inline">
+                <input type="text" name="comment" value="{{this.text}}" maxlength="250" required>
+                <button type="submit" class="btn">Save</button>
+            </form>
+            {{/if}}
+            {{#if isAdmin}}
+            <form action="/date/{{../date._id}}/comment/{{this._id}}/delete" method="POST" class="form-inline">
+                <button type="submit" class="btn btn-red">Delete</button>
+            </form>
+            {{/if}}
         </div>
         {{else}}
         <p>No comments yet.</p>
@@ -121,7 +154,9 @@
         <p><a href="/signin">Log in</a> to comment.</p>
         {{/if}}
     </div>
+
 </div>
 
 {{> votes}}
 {{> commentEdit}}
+{{#if date.isCreator}}{{> dateEdit}}{{/if}}
