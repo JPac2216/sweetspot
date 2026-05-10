@@ -49,14 +49,19 @@ router
         }
     })
     .post(async (req, res) => {
+        if(!req.session.member){
+            return res.status(401).render('error', {title: 'Unauthorized', error: 'You must be logged in to edit your profile.'});
+        }
+
         const firstName = req.body.firstName ? xss(req.body.firstName): undefined;
         const lastName = req.body.lastName ? xss(req.body.lastName) : undefined;
         const email = req.body.email ? xss(req.body.email) : undefined;
         const username = req.body.username ? xss(req.body.username) : undefined;
         const gender = req.body.gender ? xss(req.body.gender) : undefined;
-        const primaryLocation  = req.body.primaryLocation  ? xss(req.body.primaryLocation)  : undefined;
-        const secondaryLocation= req.body.secondaryLocation ? xss(req.body.secondaryLocation) : undefined;
-        const currentPassword  = req.body.currentPassword  ? xss(req.body.currentPassword)  : undefined;
+        const primaryLocation = req.body.primaryLocation  ? xss(req.body.primaryLocation)  : undefined;
+        const secondaryLocation = req.body.secondaryLocation ? xss(req.body.secondaryLocation) : undefined;
+        const currentPassword = req.body.currentPassword  ? xss(req.body.currentPassword)  : undefined;
+        const newPassword = req.body.newPassword ? xss(req.body.newPassword) : undefined;
 
         if (!currentPassword || currentPassword.trim().length === 0) {
             return res.status(400).render('pages/userEdit', {
@@ -71,6 +76,7 @@ router
         if (lastName) updateObj.lastName = lastName;
         if (email) updateObj.email = email;
         if (username) updateObj.username = username;
+        if (newPassword) updateObj.password = newPassword;
         if (gender) updateObj.gender = gender;
         if (primaryLocation) updateObj.primaryLocation = primaryLocation;
         if (secondaryLocation !== undefined) updateObj.secondaryLocation = secondaryLocation;

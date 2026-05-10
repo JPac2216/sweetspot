@@ -214,7 +214,7 @@ export const updateUser = async (email, password, updateObj) => {
     if(typeof updateObj !== 'object' || Array.isArray(updateObj)) throw 'update object must be an object';
     if(Object.keys(updateObj).length === 0) throw 'update object cannot be empty';
 
-    let validKeys = ["firstName", "lastName", "email", "username", "gender", "primaryLocation", "secondaryLocation",];
+    let validKeys = ["firstName", "lastName", "email", "username", "password", "gender", "primaryLocation", "secondaryLocation"];
     for(let key in updateObj){
     if(!validKeys.includes(key)) throw "Invalid key in update object";
     }
@@ -249,6 +249,9 @@ export const updateUser = async (email, password, updateObj) => {
     }
     if(Object.hasOwn(updateObj, 'secondaryLocation')){
         updateFields.secondaryLocation = validated.secondaryLocation;
+    }
+    if(Object.hasOwn(updateObj, 'password')){
+        updateFields.hashedPassword = await bcrypt.hash(validated.password, saltRounds);
     }
 
     const updatedInfo = await usersCollection.findOneAndUpdate(
