@@ -1,10 +1,21 @@
+<nav class="navbar">
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <div class="nav-links">
+        <a href="/spots/explore" class="nav-btn">Explore</a>
+        <a href="/spots/appeal" class="nav-btn">Appeal</a>
+        <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+    </div>
+</nav>
+
+
 <h1>Add a Review</h1>
 
 {{#if error}}
     <p>{{error}}</p>
 {{/if}}
 
-<form id="review-form" name="review-form" method="POST" action="/spot/{{spot._id}}/review">
+<form id="review-form" name="review-form" method="POST" action="/spots/{{spot._id}}/review">
     <label for="review">Write your review:</label>
     <input type="text" id="review" name="review"/>
 

@@ -1,16 +1,16 @@
 <nav class="navbar">
-    <a href="/user/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
+    <a href="/home"><img src="/css/Sweet%20Spot.png" alt="Sweet Spot" class="logo"></a>
     <div class="nav-links">
-        <a href="/explore" class="nav-btn">Explore</a>
-        <a href="/appeal" class="nav-btn">Appeal</a>
+        <a href="/spots/explore" class="nav-btn">Explore</a>
+        <a href="/spots/appeal" class="nav-btn">Appeal</a>
         <a href="/date/create" class="nav-btn nav-btn-blue">Create +</a>
-        <a href="/user/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
+        <a href="/profile"><img src="/css/profile_icon.png" alt="My Profile" class="nav-icon"></a>
     </div>
 </nav>
 
 <div class="page">
     <div class="form-page">
-        <form id="spot-create-form" class="form-box" action="/appeal" method="POST">
+        <form id="spot-create-form" class="form-box" action="/spots/appeal" method="POST">
             <div class="form-group">
                 <label for="name">Spot Name</label>
                 <input type="text" id="name" name="name" class="name" placeholder="e.g. Prospect Park" required>
