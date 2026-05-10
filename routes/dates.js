@@ -103,6 +103,13 @@ router
 
         try {
             await dataDates.voteOnDate(userId, dateId, 1);
+            const date = await dataDates.getDateById(dateId);
+            const upvotes = date.votes.filter(v => v.value === 1).length;
+            const downvotes = date.votes.filter(v => v.value === -1).length;
+
+            if (req.accepts('json') && !req.accepts('html')) {
+                return res.json({ upvotes, downvotes });
+            }
             return res.redirect(`/date/${dateId}`);
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
@@ -125,6 +132,12 @@ router
 
         try {
             await dataDates.voteOnDate(userId, dateId, -1);
+            const date = await dataDates.getDateById(dateId);
+            const upvotes = date.votes.filter(v => v.value === 1).length;
+            const downvotes = date.votes.filter(v => v.value === -1).length;
+            if (req.accepts('json') && !req.accepts('html')) {
+                return res.json({ upvotes, downvotes });
+            }
             return res.redirect(`/date/${dateId}`);
         } catch (e) {
             return res.status(500).render('error', {title: 'Error', error: e});
@@ -428,7 +441,7 @@ router
             date.isLoggedIn = sessionUserId !== null;
             date.isPublic = date.visibility === "public";
 
-            return res.status(200).render('pages/dateDetail', {title: date.title, date});
+            return res.status(200).render('pages/dateDetail', {title: date.title, date, isAdmin: req.session.member?.membershipLevel === 'admin'});
         } catch (e) {
             return res.status(404).render('error', {title: 'Error: Date Not Found', error: e});
         }
